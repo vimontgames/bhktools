@@ -1,11 +1,12 @@
 *.user
 .vs/*
 enc_temp_folder/*
-data
-tmp
+data/*
+tmp/*
 *.ilk
 *.pdb
 *.exe
 *.iobj
 *.ipdb
+*.hms
 lib/*
