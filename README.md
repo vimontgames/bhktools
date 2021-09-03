@@ -4,6 +4,11 @@ Benualdo's HumanKind Tools
 
 - bhkmap: displays a HumanKind map .hmap file with various useful informations like resources.
 
+![ScreenShot0](doc/img/screen.png?raw=true "Screenshot0")
+
+# how to build
+Open bhktools.sln using Visual Studio 2017 or later.
+
 Dependencies
 -----
 

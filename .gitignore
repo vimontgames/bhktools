@@ -1,6 +1,7 @@
 *.user
 .vs/*
 enc_temp_folder/*
+data
 tmp
 *.ilk
 *.pdb
