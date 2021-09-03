@@ -7,7 +7,12 @@ Benualdo's HumanKind Tools
 ![ScreenShot0](doc/img/screen.png?raw=true "Screenshot0")
 
 # how to build
-Open bhktools.sln using Visual Studio 2017 or later.
+Open bhktools.sln using Visual Studio 2017 or later then build solution :)
+
+All dependencies but the SFML have been copied to this repo, you will need to set an $(SFML) environment variable named $(SFML) pointing to your SFML install in order to compile.
+
+i.e.
+SFML=G:\SFML\SFML-2.5.1
 
 Dependencies
 -----
