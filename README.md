@@ -9,7 +9,7 @@ Benualdo's HumanKind Tools
 # how to build
 Open bhktools.sln using Visual Studio 2017 or later then build solution :)
 
-All dependencies but the SFML have been copied to this repo, you will need to set an $(SFML) environment variable named $(SFML) pointing to your SFML install in order to compile.
+All dependencies but the SFML have been copied to this repo, you will need to set an environment variable named $(SFML) pointing to your SFML install in order to compile.
 
 i.e.
 SFML=G:\SFML\SFML-2.5.1
