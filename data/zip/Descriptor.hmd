@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<?amplitude-serialization-serializer version="4"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.AI.Brain, Amplitude.AI" number="2"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.AI.Hsm.StateMachineContext`2+TransitionContext, Amplitude.AI" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Framework.Simulation.BaseSimulationEntity, Amplitude.Framework" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Framework.Simulation.Collections.DescriptorCollection, Amplitude.Framework" number="2"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.AI.Brain.AnalysisData.MajorEmpire.MajorEmpireData, Amplitude.Mercury.AI.Brain" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.AI.Brain.Tasks.DoCulturalAction, Amplitude.Mercury.AI.Brain" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Data.Simulation.SimulationEventEffect_AddNarratorSentence, Amplitude.Mercury.Data" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Game.GameSaveDescriptor, Amplitude.Mercury.Firstpass" number="5"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Game.GameSaveSessionSlotDescriptor, Amplitude.Mercury.Firstpass" number="5"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Game.GameSaveSlotsDescriptor, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Interop.ArmyStealTerritoryActionInfo, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Interop.AvailableGrievanceCollection, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Interop.BombardmentAftermathInfo, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Interop.BombardmentSufferedNotificationData, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Interop.DistrictInfo, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Interop.EditorOrderCreateArmyAt, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Interop.EditorOrderForceWar, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Interop.EmpireAchievementStatistics, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Interop.EmpireStatistics, Amplitude.Mercury.Firstpass" number="3"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Interop.EmpireWarPeriod, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Interop.LootInfo, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Interop.NaturalWonderDiscoveredNotificationData, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Interop.OnGoingDemandCollection, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Interop.PopulationStolenNotificationData, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Interop.ReligionChangedNotificationData, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Interop.ReligiousConversionEndedNotificationData, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Interop.ReligiousConversionStartedNotificationData, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Interop.SurrenderProposition, Amplitude.Mercury.Firstpass" number="2"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Interop.SurrenderTerritoryInfo, Amplitude.Mercury.Firstpass" number="2"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Interop.TenetChosenNotificationData, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Interop.TradeNotificationData, Amplitude.Mercury.Firstpass" number="2"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Interop.TradeRoadDestroyedDestinationNotificationData, Amplitude.Mercury.Firstpass" number="2"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Interop.TradeRoadDestroyedOriginNotificationData, Amplitude.Mercury.Firstpass" number="2"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Interop.TradeRoadFreezedDestinationNotificationData, Amplitude.Mercury.Firstpass" number="2"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Interop.TradeRoadFreezedOriginNotificationData, Amplitude.Mercury.Firstpass" number="2"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Sandbox.Sandbox, Amplitude.Mercury.Firstpass" number="2"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Simulation.AirStrike, Amplitude.Mercury.Firstpass" number="2"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Simulation.ArtilleryStrike, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Simulation.Battle, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Simulation.BattleRepository, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Simulation.DepartmentOfCommunication, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Simulation.DepartmentOfDefense, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Simulation.DepartmentOfDevelopment, Amplitude.Mercury.Firstpass" number="2"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Simulation.DepartmentOfForeignAffairs, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Simulation.DepartmentOfResources, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Simulation.DepartmentOfTheInterior, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Simulation.DiplomaticMoral, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Simulation.EndGameController, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Simulation.MajorEmpire, Amplitude.Mercury.Firstpass" number="8"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Simulation.MinorEmpire, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Simulation.NarratorAncillary, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Simulation.Participant_Army, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Simulation.Region+SurroundingTerritoryCollection, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Simulation.Settlement, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Simulation.SettlementStatusOnEventCollection, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Simulation.SimulationEventEffect_AddEmpireBattleAbility, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Simulation.World, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.StateShare.StateShareHeader, Amplitude.Mercury.Firstpass" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Terrain.Landmark, Amplitude.Mercury.Terrain" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Terrain.LandmarkDatabase, Amplitude.Mercury.Terrain" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Terrain.SpawnPoint, Amplitude.Mercury.Terrain" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Terrain.TerrainSave, Amplitude.Mercury.Terrain" number="3"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Terrain.TerrainSaveDescriptor, Amplitude.Mercury.Terrain" number="3"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Terrain.Territory, Amplitude.Mercury.Terrain" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Terrain.TerritoryDatabase, Amplitude.Mercury.Terrain" number="1"?>
+<?amplitude-serialization-serializer-revision type="Amplitude.Mercury.Terrain.WorldMapEntitiesProvider, Amplitude.Mercury.Terrain" number="1"?>
+<Document>
+    <TerrainSaveDescriptor>
+        <Name Null="true" />
+        <Description Null="true" />
+        <Author Null="true" />
+        <CreationDate>0</CreationDate>
+        <LastEditionDate>0</LastEditionDate>
+        <MapFormatRevision>10</MapFormatRevision>
+        <EmpiresCount>8</EmpiresCount>
+        <Width>150</Width>
+        <Height>88</Height>
+        <FailureFlags>0</FailureFlags>
+    </TerrainSaveDescriptor>
+</Document>

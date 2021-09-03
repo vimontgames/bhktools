@@ -1,0 +1,10 @@
+*.user
+.vs/*
+enc_temp_folder/*
+tmp
+*.ilk
+*.pdb
+*.exe
+*.iobj
+*.ipdb
+lib/*
