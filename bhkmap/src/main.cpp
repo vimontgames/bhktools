@@ -21,17 +21,43 @@ static string myDocumentsPath;
 static string currentWorkingDirectory;
 
 bool openFileDialog = false;
+
 bool openDisplayWindow = true;
 bool openInfoWindow = true;
-bool openDebugWindow = true;
+bool openDebugWindow = false;
+
+bool openHelpWindow = true;
+bool openAboutWindow = false;
 
 // camera
 bool pan = false;
 Vector2f panPosStart;
 Vector2f offset = Vector2f(0, 0);
 Vector2f prevOffset = Vector2f(0, 0);
+float zoom = 1.0f;
+float mouseWheelDelta = 0;
 
 static Map map;
+
+//--------------------------------------------------------------------------------------
+void resetCameraPan()
+{
+    offset = Vector2f(0, 0);
+    prevOffset = offset;
+}
+
+//--------------------------------------------------------------------------------------
+void resetCameraZoom()
+{
+    zoom = 1.0f;
+}
+
+//--------------------------------------------------------------------------------------
+void resetCamera()
+{
+    resetCameraPan();
+    resetCameraZoom();
+}
 
 //--------------------------------------------------------------------------------------
 int main() 
@@ -46,7 +72,7 @@ int main()
     if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_MYDOCUMENTS, NULL, CSIDL_MYDOCUMENTS, userFolder)))
         myDocumentsPath = ws2s(wstring(userFolder)) + "\\Humankind\\Maps";
 
-    RenderWindow window(VideoMode(screenWidth, screenHeight), "bhkmap 0.11");
+    RenderWindow window(VideoMode(screenWidth, screenHeight), "bhkmap 0.12");
     window.setFramerateLimit(60);
     Init(window);
 
@@ -56,7 +82,7 @@ int main()
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_DockingEnable;
     io.ConfigDockingTransparentPayload = true;
 
-    FiftyShadesOfGreyStyle();
+    SetupImGuiStyle();
 
     Clock deltaClock;
     while (window.isOpen()) 
@@ -68,6 +94,9 @@ int main()
 
             if (event.type == Event::Closed) 
                 window.close();
+
+            if (event.type == sf::Event::MouseWheelMoved)
+                mouseWheelDelta = (float)event.mouseWheel.delta;
         }
 
         Update(window, deltaClock.restart());
@@ -116,8 +145,14 @@ int main()
 
             if (ImGui::BeginMenu("Help"))
             {
+                if (ImGui::MenuItem("View Help"))
+                    openHelpWindow = true;
+
+                ImGui::Separator();
+
                 if (ImGui::MenuItem("About bhkmap"))
-                    __noop;
+                    openAboutWindow = true;
+
                 ImGui::EndMenu();
             }
 
@@ -126,35 +161,80 @@ int main()
 
         ImGui::End();
 
+        if (openHelpWindow)
+        {
+            if (Begin("Help", &openHelpWindow))
+            {
+                ImGui::Columns(2, "mycolumns2", false);
+                {
+                    ImGui::Text("Pan");
+                    ImGui::Text("Zoom");
+                }
+                ImGui::NextColumn();
+                {
+                    ImGui::Text("Left Mouse Button");
+                    ImGui::Text("Mouse Wheel");
+                }             
+            }
+            ImGui::End();
+        }
+
         if (openDebugWindow)
         {
             if (Begin("Debug", &openDebugWindow))
             {
-                ImGui::Columns(2, "mycolumns2", false);  // 2-ways, no border
+                ImGui::TreeNodeEx("Mouse", ImGuiTreeNodeFlags_DefaultOpen);
                 {
-                    ImGui::Text("MousePos");
-                    ImGui::Text("MouseButtons");
-                    ImGui::Text("Offset");
+                    ImGui::Columns(2, "mycolumns2", false);
+                    {
+                        ImGui::Text("Position");
+                        ImGui::Text("Buttons");
+                        ImGui::Text("Wheel");
+                    }
+
+                    ImGui::NextColumn();
+                    {
+                        const auto & mousePos = sf::Mouse::getPosition(window);
+                        ImGui::Text((to_string(mousePos.x) + ", " + to_string(mousePos.y)).c_str());
+
+                        string mouseButtonsString = "";
+                        if (sf::Mouse::isButtonPressed(Mouse::Left))
+                            mouseButtonsString += "Left ";
+
+                        if (sf::Mouse::isButtonPressed(Mouse::Middle))
+                            mouseButtonsString += "Middle ";
+
+                        if (sf::Mouse::isButtonPressed(Mouse::Right))
+                            mouseButtonsString += "Right ";
+
+                        ImGui::Text(mouseButtonsString.c_str());
+
+                        ImGui::Text((to_string((int)mouseWheelDelta)).c_str());
+                    }
                 }
-                ImGui::NextColumn();
+                ImGui::TreePop();
+
+                ImGui::Columns(1);
+
+                ImGui::TreeNodeEx("View", ImGuiTreeNodeFlags_DefaultOpen);
                 {
-                    const auto & mousePos = sf::Mouse::getPosition(window);
-                    ImGui::Text((to_string(mousePos.x) + ", " + to_string(mousePos.y)).c_str());
+                    ImGui::Columns(2, "mycolumns2", false);
+                    {
+                        ImGui::Text("Offset");
+                        ImGui::Text("Zoom");
+                    }
 
-                    string mouseButtonsString = "";
-                    if (sf::Mouse::isButtonPressed(Mouse::Left))
-                        mouseButtonsString += "Left ";
+                    ImGui::NextColumn();
+                    {
+                        char tmp[256];
+                        sprintf_s(tmp, "%.1f, %.1f", offset.x, offset.y);
+                        ImGui::Text(tmp);
 
-                    if (sf::Mouse::isButtonPressed(Mouse::Middle))
-                        mouseButtonsString += "Middle ";
-
-                    if (sf::Mouse::isButtonPressed(Mouse::Right))
-                        mouseButtonsString += "Right ";
-
-                    ImGui::Text(mouseButtonsString.c_str());
-
-                    ImGui::Text((to_string(offset.x) + ", " + to_string(offset.y)).c_str());
+                        sprintf_s(tmp, "%.1f", zoom);
+                        ImGui::Text(tmp);
+                    }
                 }
+                ImGui::TreePop();
             }
 
             ImGui::End();
@@ -252,8 +332,7 @@ int main()
             const string newFilePath = fileDialog.selected_path;
             map.path = newFilePath;
             map.loadMap(map.path, currentWorkingDirectory);
-            offset = Vector2f(0, 0);
-            prevOffset = offset;
+            resetCamera();
         }
         SetCurrentDirectory(currentWorkingDirectory.c_str());
 
@@ -261,6 +340,9 @@ int main()
             map.refresh();
 
         // update "camera"
+        const float panSpeed = 1.0f;
+        const float zoomSpeed = 1.1f;
+
         if (Mouse::isButtonPressed(Mouse::Right))
         {
             if (!pan)
@@ -272,7 +354,7 @@ int main()
             else
             {
                 //continue pan
-                offset = (panPosStart - (Vector2f)Mouse::getPosition(window)) * 0.25f + prevOffset;
+                offset = (panPosStart - (Vector2f)Mouse::getPosition(window)) * panSpeed / zoom + prevOffset;
             }
         }
         else if (pan)
@@ -282,17 +364,40 @@ int main()
             prevOffset = offset;
         }
 
+        if (0 != mouseWheelDelta)
+        {
+            if (mouseWheelDelta < 0)
+                zoom *= zoomSpeed;
+            else if (mouseWheelDelta > 0)
+                zoom /= zoomSpeed;
+
+            mouseWheelDelta = 0;
+        }
+
         window.clear();
 
+        sf::View view;
+        view.setCenter(sf::Vector2f(screenWidth*0.5f, screenHeight*0.5f));
+        view.setSize(sf::Vector2f((float)screenWidth, (float)screenHeight));
+        view.zoom(zoom); // zeng
+
+        view.move(offset);
+
+        window.setView(view);
+
         for (u32 i = 0; i < MapBitmap::Count; ++i)
-            if (map.bitmaps[i].visible)
+        {
+            auto & bitmap = map.bitmaps[i];
+            if (bitmap.visible)
             {
-                auto & sprite = map.bitmaps[i].sprite;
-                auto & texture = map.bitmaps[i].texture;
+                auto & texture = bitmap.texture;
                 texture.setRepeated(true);
-                sprite.setTextureRect(IntRect(offset.x, offset.y, texture.getSize().x, texture.getSize().y));
+
+                auto & sprite = bitmap.sprite;
                 window.draw(sprite);
             }
+        }
+
         Render(window);
         window.display();
     }

@@ -14,8 +14,10 @@ string getFixedSizeString(const string & _string, u32 _size)
 }
 
 //--------------------------------------------------------------------------------------
-void FiftyShadesOfGreyStyle()
+void SetupImGuiStyle()
 {
+    ImGui::StyleColorsLight();
+
     ImGuiStyle & style = ImGui::GetStyle();
     ImVec4 * colors = style.Colors;
 
@@ -37,7 +39,7 @@ void FiftyShadesOfGreyStyle()
     style.FrameRounding = rounding;
     style.ScrollbarRounding = rounding;
     style.GrabRounding = rounding;
-    style.Alpha = 0.75f;
+    style.Alpha = 0.85f;
 
 #ifdef IMGUI_HAS_DOCK 
     style.TabBorderSize = 0;
