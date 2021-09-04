@@ -112,6 +112,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\resourceinfo.cpp" />
+    <ClCompile Include="src\shadermanager.cpp" />
     <ClCompile Include="src\stringconvert.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -121,14 +122,48 @@
     <ClInclude Include="..\extern\base64\base64.hpp" />
     <ClInclude Include="..\extern\miniz-cpp\zip_file.hpp" />
     <ClInclude Include="..\extern\stb\stb_image.h" />
+    <ClInclude Include="shader\fx.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="shader\hlsl2glsl.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="src\colorfloat4.h" />
     <ClInclude Include="src\guistyle.h" />
     <ClInclude Include="src\map.h" />
     <ClInclude Include="src\maths.h" />
     <ClInclude Include="src\precomp.h" />
     <ClInclude Include="src\resourceinfo.h" />
+    <ClInclude Include="src\shadermanager.h" />
     <ClInclude Include="src\stringconvert.h" />
-    <ClInclude Include="src\types.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shader\default_ps.fx">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="shader\default_vs.fx">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="shader\territories_ps.fx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </None>
+    <None Include="shader\territories_vs.fx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

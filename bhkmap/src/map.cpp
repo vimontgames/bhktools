@@ -9,6 +9,9 @@
 #define STBI_ONLY_PNG
 #include "stb_image.h"
 
+#define TERRITORIES_FLAGS_WATER   0x40
+#define TERRITORIES_FLAGS_VISIBLE 0x80
+
 using namespace std;
 using namespace sf;
 using namespace tinyxml2;
@@ -60,15 +63,31 @@ void Map::refresh()
             // Zones
             const ubyte territoryIndex = zones[offset];
             const Territory territory = territoriesInfo[territoryIndex];
-            Color territoryColor = Color(0, 0, 0, 0);
+            Color territoryColor = Color(0, 0, 0, 255);
 
-            if (territory.ocean && showOceanTerritories)
-                territoryColor = Color::Blue;
+            u32 flags = 0;
 
-            if (!territory.ocean && showLandTerritories)
-                territoryColor = zoneColors[territoryIndex % _countof(zoneColors)];
+            if (territory.ocean)
+            {
+                if (showOceanTerritories)
+                {
+                    territoryColor.a = territoryIndex;
+                    flags = TERRITORIES_FLAGS_VISIBLE;
+                }            
 
-            territoryColor.a = 64;
+                flags |= TERRITORIES_FLAGS_WATER;
+            }
+            else
+            {
+                if (showLandTerritories)
+                {
+                    territoryColor.a = territoryIndex;
+                    flags = TERRITORIES_FLAGS_VISIBLE;
+                }
+            }
+
+            territoryColor.b = flags;
+            
             territories.image.setPixel(w, h, territoryColor);
 
             // Resource
@@ -110,6 +129,24 @@ void Map::refresh()
         bitmap.sprite.setTexture(bitmap.texture);
         bitmap.sprite.setTextureRect(IntRect(0, 0, bitmap.texture.getSize().x, bitmap.texture.getSize().y));
         bitmap.sprite.setScale(scale);
+
+        if (bitmap.shader == invalidShaderID)
+        {
+            switch ((MapBitmap)i)
+            {
+                default:
+                    break;
+
+                case MapBitmap::Territories:
+                    bitmap.shader = ShaderManager::add("bhkmap/shader/territories_vs.fx", "bhkmap/shader/territories_ps.fx");
+                    bitmap.blend = sf::BlendMode(BlendMode::Factor::SrcAlpha, sf::BlendMode::Factor::OneMinusSrcAlpha, BlendMode::Equation::Add);
+                break;
+
+                case MapBitmap::Resources:
+                    bitmap.blend = sf::BlendMode(BlendMode::Factor::SrcAlpha, sf::BlendMode::Factor::OneMinusSrcAlpha, BlendMode::Equation::Add);
+                    break;
+            }
+        }
     }
 }
 

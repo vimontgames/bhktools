@@ -16,40 +16,40 @@ using namespace imgui_addons;
 u32 screenWidth = 1280;
 u32 screenHeight = 720;
 
-static ImGuiFileBrowser fileDialog;
-static string myDocumentsPath;
-static string currentWorkingDirectory;
+static ImGuiFileBrowser g_fileDialog;
+static string g_myDocumentsPath;
+static string g_currentWorkingDirectory;
 
-bool openFileDialog = false;
+bool g_openFileDialog = false;
 
-bool openDisplayWindow = true;
-bool openInfoWindow = true;
-bool openDebugWindow = false;
+bool g_openDisplayWindow = true;
+bool g_openInfoWindow = true;
+bool g_openDebugWindow = false;
 
-bool openHelpWindow = true;
-bool openAboutWindow = false;
+bool g_openHelpWindow = true;
+bool g_openAboutWindow = false;
 
 // camera
-bool pan = false;
-Vector2f panPosStart;
-Vector2f offset = Vector2f(0, 0);
-Vector2f prevOffset = Vector2f(0, 0);
-float zoom = 1.0f;
-float mouseWheelDelta = 0;
+bool g_cameraPan = false;
+Vector2f g_cameraPanOrigin;
+Vector2f g_cameraOffset = Vector2f(0, 0);
+Vector2f g_cameraPreviousOffset = Vector2f(0, 0);
+float g_cameraZoom = 1.0f;
+float g_mouseWheelDelta = 0;
 
-static Map map;
+static Map g_map;
 
 //--------------------------------------------------------------------------------------
 void resetCameraPan()
 {
-    offset = Vector2f(0, 0);
-    prevOffset = offset;
+    g_cameraOffset = Vector2f(0, 0);
+    g_cameraPreviousOffset = g_cameraOffset;
 }
 
 //--------------------------------------------------------------------------------------
 void resetCameraZoom()
 {
-    zoom = 1.0f;
+    g_cameraZoom = 1.0f;
 }
 
 //--------------------------------------------------------------------------------------
@@ -60,21 +60,41 @@ void resetCamera()
 }
 
 //--------------------------------------------------------------------------------------
+class dbg_stream_for_cout : public std::stringbuf
+{
+public:
+    ~dbg_stream_for_cout() { sync(); }
+    int sync()
+    {
+        ::OutputDebugStringA(str().c_str());
+        str(std::string()); // Clear the string buffer
+        return 0;
+    }
+};
+dbg_stream_for_cout g_DebugStreamFor_cout;
+
+//--------------------------------------------------------------------------------------
 int main() 
 {
+    // Redirect SFML errors to debug output
+    std::cout.rdbuf(&g_DebugStreamFor_cout);
+    std::streambuf* previous = sf::err().rdbuf(&g_DebugStreamFor_cout);
+
     // save dir
     TCHAR cwd[MAX_PATH];
     GetCurrentDirectory(MAX_PATH, cwd);
-    currentWorkingDirectory = string(cwd);
+    g_currentWorkingDirectory = string(cwd);
 
     // default path
     WCHAR userFolder[MAX_PATH];
     if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_MYDOCUMENTS, NULL, CSIDL_MYDOCUMENTS, userFolder)))
-        myDocumentsPath = ws2s(wstring(userFolder)) + "\\Humankind\\Maps";
+        g_myDocumentsPath = ws2s(wstring(userFolder)) + "\\Humankind\\Maps";
 
-    RenderWindow window(VideoMode(screenWidth, screenHeight), "bhkmap 0.12");
+    RenderWindow window(VideoMode(screenWidth, screenHeight), "bhkmap 0.13");
     window.setFramerateLimit(60);
     Init(window);
+
+    ShaderManager::init();
 
     // Setup dear ImGui
     ImGui::CreateContext();
@@ -96,7 +116,10 @@ int main()
                 window.close();
 
             if (event.type == sf::Event::MouseWheelMoved)
-                mouseWheelDelta = (float)event.mouseWheel.delta;
+            {
+                if (Keyboard::isKeyPressed(Keyboard::LControl) || Keyboard::isKeyPressed(Keyboard::RControl))
+                    g_mouseWheelDelta = (float)event.mouseWheel.delta;
+            }
         }
 
         Update(window, deltaClock.restart());
@@ -122,7 +145,7 @@ int main()
             if (ImGui::BeginMenu("File"))
             {
                 if (ImGui::MenuItem("Open .hmap file"))
-                    openFileDialog = true;
+                    g_openFileDialog = true;
 
                 ImGui::EndMenu();
             }
@@ -130,15 +153,15 @@ int main()
             if (ImGui::BeginMenu("Tools"))
             {
                 if (ImGui::MenuItem("Display"))
-                    openDisplayWindow = true;
+                    g_openDisplayWindow = true;
 
                 if (ImGui::MenuItem("Info"))
-                    openInfoWindow = true;
+                    g_openInfoWindow = true;
 
                 ImGui::Separator();
 
                 if (ImGui::MenuItem("Debug"))
-                    openDebugWindow = true;
+                    g_openDebugWindow = true;
 
                 ImGui::EndMenu();
             }
@@ -146,12 +169,12 @@ int main()
             if (ImGui::BeginMenu("Help"))
             {
                 if (ImGui::MenuItem("View Help"))
-                    openHelpWindow = true;
+                    g_openHelpWindow = true;
 
                 ImGui::Separator();
 
                 if (ImGui::MenuItem("About bhkmap"))
-                    openAboutWindow = true;
+                    g_openAboutWindow = true;
 
                 ImGui::EndMenu();
             }
@@ -161,9 +184,9 @@ int main()
 
         ImGui::End();
 
-        if (openHelpWindow)
+        if (g_openHelpWindow)
         {
-            if (Begin("Help", &openHelpWindow))
+            if (Begin("Help", &g_openHelpWindow))
             {
                 ImGui::Columns(2, "mycolumns2", false);
                 {
@@ -173,15 +196,15 @@ int main()
                 ImGui::NextColumn();
                 {
                     ImGui::Text("Left Mouse Button");
-                    ImGui::Text("Mouse Wheel");
+                    ImGui::Text("Ctrl + Mouse Wheel");
                 }             
             }
             ImGui::End();
         }
 
-        if (openDebugWindow)
+        if (g_openDebugWindow)
         {
-            if (Begin("Debug", &openDebugWindow))
+            if (Begin("Debug", &g_openDebugWindow))
             {
                 ImGui::TreeNodeEx("Mouse", ImGuiTreeNodeFlags_DefaultOpen);
                 {
@@ -209,7 +232,7 @@ int main()
 
                         ImGui::Text(mouseButtonsString.c_str());
 
-                        ImGui::Text((to_string((int)mouseWheelDelta)).c_str());
+                        ImGui::Text((to_string((int)g_mouseWheelDelta)).c_str());
                     }
                 }
                 ImGui::TreePop();
@@ -227,10 +250,10 @@ int main()
                     ImGui::NextColumn();
                     {
                         char tmp[256];
-                        sprintf_s(tmp, "%.1f, %.1f", offset.x, offset.y);
+                        sprintf_s(tmp, "%.1f, %.1f", g_cameraOffset.x, g_cameraOffset.y);
                         ImGui::Text(tmp);
 
-                        sprintf_s(tmp, "%.1f", zoom);
+                        sprintf_s(tmp, "%.1f", g_cameraZoom);
                         ImGui::Text(tmp);
                     }
                 }
@@ -240,9 +263,9 @@ int main()
             ImGui::End();
         }
 
-        if (openInfoWindow)
+        if (g_openInfoWindow)
         {
-            if (Begin("Info", &openInfoWindow))
+            if (Begin("Info", &g_openInfoWindow))
             {
                 ImGui::Columns(2, "mycolumns2", false);  // 2-ways, no border
                 {
@@ -252,30 +275,48 @@ int main()
                 }
                 ImGui::NextColumn();
                 {
-                    ImGui::Text(map.author.c_str());
-                    ImGui::Text(to_string(map.width).c_str());
-                    ImGui::Text(to_string(map.height).c_str());
+                    ImGui::Text(g_map.author.c_str());
+                    ImGui::Text(to_string(g_map.width).c_str());
+                    ImGui::Text(to_string(g_map.height).c_str());
+                }
+
+                ImGui::Columns(1);
+                ImGui::Separator();
+
+                ImGui::Columns(2, "mycolumns2", false); 
+                {
+                    ImGui::Text("Territories");
+                }
+                ImGui::NextColumn();
+                {
+                    ImGui::Text("%u", g_map.territoriesInfo.size());
                 }
             }
 
             ImGui::End();
         }
 
-        if (openDisplayWindow)
+        if (g_openDisplayWindow)
         {
-            if (Begin("Display", &openDisplayWindow))
+            if (Begin("Display", &g_openDisplayWindow))
             {
                 const u32 textLen = 10;
 
-                if (ImGui::TreeNodeEx("Territories", ImGuiTreeNodeFlags_DefaultOpen))
+                if (TreeNodeEx("Territories", ImGuiTreeNodeFlags_DefaultOpen))
                 {
-                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Ocean", textLen).c_str(), &map.showOceanTerritories);
+                    needRefresh |= Checkbox(getFixedSizeString("Ocean", textLen).c_str(), &g_map.showOceanTerritories);
                     ImGui::SameLine();
-                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Land", textLen).c_str(), &map.showLandTerritories);
+                    needRefresh |= Checkbox(getFixedSizeString("Land", textLen).c_str(), &g_map.showLandTerritories);
 
-                    map.bitmaps[Territories].visible = map.showLandTerritories || map.showOceanTerritories;
+                    needRefresh |= Checkbox(getFixedSizeString("Borders", textLen).c_str(), &g_map.showTerritoriesBorders);
 
-                    ImGui::TreePop();
+                    //PushItemWidth(120);
+                    //needRefresh |= SliderFloat(getFixedSizeString("Opacity", textLen).c_str(), &g_map.bitmaps[Territories].alpha, 0.0f, 1.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+                    //PopItemWidth();
+
+                    g_map.bitmaps[Territories].visible = g_map.showLandTerritories || g_map.showOceanTerritories;
+
+                    TreePop();
                 }
 
                 if (ImGui::TreeNodeEx("Resources", ImGuiTreeNodeFlags_DefaultOpen))
@@ -300,15 +341,15 @@ int main()
                         return changed;
                     };
 
-                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Strategic", textLen).c_str(), &map.showStrategicResources);
-                    if (map.showStrategicResources)
+                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Strategic", textLen).c_str(), &g_map.showStrategicResources);
+                    if (g_map.showStrategicResources)
                         needRefresh |= ListResources(strategicResources, (u32)StrategicResource::First, (u32)StrategicResource::Last);
 
-                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Luxury", textLen).c_str(), &map.showLuxuryResources);
-                    if (map.showLuxuryResources)
+                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Luxury", textLen).c_str(), &g_map.showLuxuryResources);
+                    if (g_map.showLuxuryResources)
                         needRefresh |= ListResources(luxuryResources, (u32)LuxuryResource::First, (u32)LuxuryResource::Last);
 
-                    map.bitmaps[Resources].visible = map.showStrategicResources || map.showLuxuryResources;
+                    g_map.bitmaps[Resources].visible = g_map.showStrategicResources || g_map.showLuxuryResources;
 
                     ImGui::TreePop();
                 };
@@ -320,24 +361,24 @@ int main()
         if (demo)
             ImGui::ShowDemoWindow(&demo);
 
-        if (openFileDialog)
+        if (g_openFileDialog)
         {
             ImGui::OpenPopup("Open .hmap file");
-            openFileDialog = false;
+            g_openFileDialog = false;
+            SetCurrentDirectory(g_myDocumentsPath.c_str());
         }
 
-        SetCurrentDirectory(myDocumentsPath.c_str());
-        if (fileDialog.showFileDialog("Open .hmap file", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(float(screenWidth)/2.0f, float(screenHeight)/2.0f), ".hmap"))
+        if (g_fileDialog.showFileDialog("Open .hmap file", ImGuiFileBrowser::DialogMode::OPEN, ImVec2(float(screenWidth)/2.0f, float(screenHeight)/2.0f), ".hmap"))
         {
-            const string newFilePath = fileDialog.selected_path;
-            map.path = newFilePath;
-            map.loadMap(map.path, currentWorkingDirectory);
+            SetCurrentDirectory(g_currentWorkingDirectory.c_str());
+            const string newFilePath = g_fileDialog.selected_path;
+            g_map.path = newFilePath;
+            g_map.loadMap(g_map.path, g_currentWorkingDirectory);
             resetCamera();
         }
-        SetCurrentDirectory(currentWorkingDirectory.c_str());
 
         if (needRefresh)
-            map.refresh();
+            g_map.refresh();
 
         // update "camera"
         const float panSpeed = 1.0f;
@@ -345,33 +386,33 @@ int main()
 
         if (Mouse::isButtonPressed(Mouse::Right))
         {
-            if (!pan)
+            if (!g_cameraPan)
             {
                 // begin pan
-                panPosStart = (Vector2f)Mouse::getPosition(window);
-                pan = true;
+                g_cameraPanOrigin = (Vector2f)Mouse::getPosition(window);
+                g_cameraPan = true;
             }
             else
             {
                 //continue pan
-                offset = (panPosStart - (Vector2f)Mouse::getPosition(window)) * panSpeed / zoom + prevOffset;
+                g_cameraOffset = (g_cameraPanOrigin - (Vector2f)Mouse::getPosition(window)) * panSpeed / g_cameraZoom + g_cameraPreviousOffset;
             }
         }
-        else if (pan)
+        else if (g_cameraPan)
         {
             // end pan
-            pan = false;
-            prevOffset = offset;
+            g_cameraPan = false;
+            g_cameraPreviousOffset = g_cameraOffset;
         }
 
-        if (0 != mouseWheelDelta)
+        if (0 != g_mouseWheelDelta)
         {
-            if (mouseWheelDelta < 0)
-                zoom *= zoomSpeed;
-            else if (mouseWheelDelta > 0)
-                zoom /= zoomSpeed;
+            if (g_mouseWheelDelta < 0)
+                g_cameraZoom *= zoomSpeed;
+            else if (g_mouseWheelDelta > 0)
+                g_cameraZoom /= zoomSpeed;
 
-            mouseWheelDelta = 0;
+            g_mouseWheelDelta = 0;
         }
 
         window.clear();
@@ -379,29 +420,50 @@ int main()
         sf::View view;
         view.setCenter(sf::Vector2f(screenWidth*0.5f, screenHeight*0.5f));
         view.setSize(sf::Vector2f((float)screenWidth, (float)screenHeight));
-        view.zoom(zoom); // zeng
+        view.zoom(g_cameraZoom); // zeng
 
-        view.move(offset);
+        view.move(g_cameraOffset);
 
         window.setView(view);
 
         for (u32 i = 0; i < MapBitmap::Count; ++i)
         {
-            auto & bitmap = map.bitmaps[i];
+            auto & bitmap = g_map.bitmaps[i];
             if (bitmap.visible)
             {
                 auto & texture = bitmap.texture;
-                texture.setRepeated(true);
+                texture.setRepeated(false);
 
                 auto & sprite = bitmap.sprite;
-                window.draw(sprite);
+
+                sf::Shader * shader = ShaderManager::get(bitmap.shader);
+
+                RenderStates rs;
+                             rs.shader = shader;
+                             rs.blendMode = bitmap.blend;
+
+                if (shader)
+                {
+                    shader->setUniform("texSize", (Vector2f)texture.getSize());
+                    shader->setUniform("screenSize", Vector2f(screenWidth, screenHeight));
+                    shader->setUniform("borders", g_map.showTerritoriesBorders);
+                }
+
+                window.draw(sprite, rs);
             }
         }
 
         Render(window);
         window.display();
+
+        if (sf::Keyboard::isKeyPressed(Keyboard::F6))
+        {
+            SetCurrentDirectory(g_currentWorkingDirectory.c_str());
+            ShaderManager::update();
+        }
     }
 
+    ShaderManager::deinit();
     Shutdown();
 
     return 0;

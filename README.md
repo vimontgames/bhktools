@@ -14,6 +14,13 @@ SFML=G:\SFML\SFML-2.5.1
 
 # Changelog
 
+v0.13
+-----
+* Add shader manager
+* Display territory borders
+
+![ScreenShot013](doc/img/screen013.png?raw=true "Screenshot013")
+
 v0.12
 -----
 * Pan & Zoom using SFML views

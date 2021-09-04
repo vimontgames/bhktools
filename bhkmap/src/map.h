@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types.h"
+#include "shadermanager.h"
 
 //--------------------------------------------------------------------------------------
 enum MapBitmap
@@ -28,6 +28,11 @@ struct Bitmap
     sf::Sprite sprite;
     sf::Image image;
     sf::Texture texture;
+
+    ShaderID shader = invalidShaderID;
+    sf::BlendMode blend = { sf::BlendMode::Factor::One, sf::BlendMode::Factor::Zero, sf::BlendMode::Add };
+
+    float alpha = 1.0f;
 };
 
 namespace tinyxml2
@@ -52,8 +57,11 @@ struct Map
     Bitmap bitmaps[MapBitmap::Count];
 
     bool loaded = false;
+    
     bool showOceanTerritories = false;
     bool showLandTerritories = true;
+    bool showTerritoriesBorders = true;
+
     bool showStrategicResources = false;
     bool showLuxuryResources = false;
 

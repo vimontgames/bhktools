@@ -32,6 +32,9 @@
     <Filter Include="extern\stb">
       <UniqueIdentifier>{a0474975-525a-456a-a4d5-7a7758acc008}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shader">
+      <UniqueIdentifier>{0f92c5e1-e24a-4b80-aab4-ced68f180d41}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -76,6 +79,9 @@
     <ClCompile Include="src\precomp.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\shadermanager.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />
@@ -89,9 +95,6 @@
     </ClInclude>
     <ClInclude Include="..\extern\stb\stb_image.h">
       <Filter>extern\stb</Filter>
-    </ClInclude>
-    <ClInclude Include="src\types.h">
-      <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\map.h">
       <Filter>src</Filter>
@@ -114,5 +117,28 @@
     <ClInclude Include="src\precomp.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="shader\fx.h">
+      <Filter>shader</Filter>
+    </ClInclude>
+    <ClInclude Include="shader\hlsl2glsl.h">
+      <Filter>shader</Filter>
+    </ClInclude>
+    <ClInclude Include="src\shadermanager.h">
+      <Filter>src</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="shader\territories_ps.fx">
+      <Filter>shader</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\territories_vs.fx">
+      <Filter>shader</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\default_ps.fx">
+      <Filter>shader</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\default_vs.fx">
+      <Filter>shader</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
