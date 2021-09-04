@@ -4,8 +4,6 @@ Benualdo's HumanKind Tools
 
 - bhkmap: displays a HumanKind map .hmap file with various useful informations like resources.
 
-![ScreenShot0](doc/img/screen.png?raw=true "Screenshot0")
-
 # Build
 Open bhktools.sln using Visual Studio 2017 or later then build solution :)
 
@@ -15,6 +13,14 @@ i.e.
 SFML=G:\SFML\SFML-2.5.1
 
 # Changelog
+
+v0.12
+-----
+* Pan & Zoom using SFML views
+* Improve the "Debug" window and add an "Help" window
+* Switch to light theme
+
+![ScreenShot012](doc/img/screen012.png?raw=true "Screenshot012")
 
 v0.11
 -----
@@ -26,6 +32,8 @@ v0.1
 -----
 * Initial commit
 * Open .hmap file and decode data
+
+![ScreenShot0](doc/img/screen.png?raw=true "Screenshot0")
 
 Dependencies
 -----
