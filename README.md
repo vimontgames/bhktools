@@ -14,6 +14,13 @@ SFML=G:\SFML\SFML-2.5.1
 
 # Changelog
 
+v0.21
+-----
+* Save .hmap files
+* Remove landmarks at save to fix corrupted save files
+
+![ScreenShot021](doc/img/screen021.png?raw=true "Screenshot021")
+
 v0.20
 -----
 * Display resource icons

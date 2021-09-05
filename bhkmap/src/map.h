@@ -2,6 +2,7 @@
 
 #include "shadermanager.h"
 #include "resourceinfo.h"
+#include "tinyxml2.h"
 
 //--------------------------------------------------------------------------------------
 enum MapBitmap
@@ -43,11 +44,7 @@ struct Bitmap
     float alpha = 1.0f;
 };
 
-namespace tinyxml2
-{
-    class XMLElement;
-}
-
+//--------------------------------------------------------------------------------------
 enum class TerritoryBackground : u32
 {
     None = 0,
@@ -62,8 +59,16 @@ enum class TerritoryBackground : u32
 //--------------------------------------------------------------------------------------
 struct Map
 {
+    void refresh();
+
+    u32 * loadTexture(tinyxml2::XMLElement * _xmlTerrainSave, const std::string & _name);
+
+    void loadHMap(const std::string & _map, const std::string & _cwd);
+    void saveHMap(std::string & _map, const std::string & _cwd);
+
     std::string path;
     std::string author;
+
     u32 width = 0;
     u32 height = 0;
 
@@ -83,11 +88,11 @@ struct Map
     bool showStrategicResources = false;
     bool showLuxuryResources = false;
 
-    void refresh();
-
-    u32 * loadTexture(tinyxml2::XMLElement * _xmlTerrainSave, const std::string & _name);
-    void loadMap(const std::string & _map, const std::string & _cwd);
-
     sf::Texture strategicResourceTextures[(u32)StrategicResource::Count];
     sf::Texture luxuryResourceTextures[(u32)LuxuryResource::Count];
+
+    tinyxml2::XMLDocument xmlDocDescriptor;
+    tinyxml2::XMLDocument xmlDocSave;
+
+    bool fixLandmarks = true;
 };

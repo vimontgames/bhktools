@@ -6,7 +6,7 @@ ShaderID ShaderManager::s_defaultShaderID = invalidShaderID;
 //--------------------------------------------------------------------------
 void ShaderManager::init()
 {
-	s_defaultShaderID = add("bhkmap/shader/default_vs.fx", "bhkmap/shader/default_ps.fx", true);
+	s_defaultShaderID = add("data/shader/default_vs.fx", "data/shader/default_ps.fx", true);
 }
 
 //--------------------------------------------------------------------------
@@ -63,7 +63,7 @@ sf::Shader * ShaderManager::compile(const char * _vs, const char * _ps, bool _de
 {
 	sf::String header, vs, ps;
 
-	fileToString(header, "bhkmap/shader/hlsl2glsl.h");
+	fileToString(header, "data/shader/hlsl2glsl.h");
 	fileToString(vs, _vs);
 	fileToString(ps, _ps);
 
@@ -75,7 +75,7 @@ sf::Shader * ShaderManager::compile(const char * _vs, const char * _ps, bool _de
 	else
 	{
 		sf::String fx;
-		fileToString(fx, "bhkmap/shader/fx.h");
+		fileToString(fx, "data/shader/fx.h");
 
 		vs = header + fx + vs;
 		ps = header + fx + ps;

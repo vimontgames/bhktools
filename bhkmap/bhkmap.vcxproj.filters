@@ -138,6 +138,9 @@
     <ClInclude Include="src\shadermanager.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\extern\stb\stb_image_write.h">
+      <Filter>extern\stb</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shader\resources_ps.fx">

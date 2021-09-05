@@ -21,6 +21,8 @@ static string g_myDocumentsPath;
 static string g_currentWorkingDirectory;
 
 bool g_openFileDialog = false;
+bool g_saveFileDialog = false;
+bool g_saveOptionDialog = false;
 
 bool g_openDisplayWindow = true;
 bool g_openInfoWindow = true;
@@ -90,7 +92,7 @@ int main()
     if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_MYDOCUMENTS, NULL, CSIDL_MYDOCUMENTS, userFolder)))
         g_myDocumentsPath = ws2s(wstring(userFolder)) + "\\Humankind\\Maps";
 
-    RenderWindow window(VideoMode(screenWidth, screenHeight), "bhkmap 0.2");
+    RenderWindow window(VideoMode(screenWidth, screenHeight), "bhkmap 0.21");
     window.setFramerateLimit(60);
     Init(window);
 
@@ -144,8 +146,16 @@ int main()
         {
             if (ImGui::BeginMenu("File"))
             {
-                if (ImGui::MenuItem("Open .hmap file"))
+                if (ImGui::MenuItem("Open"))
                     g_openFileDialog = true;
+
+                if(ImGui::MenuItem("Save"))
+                    g_saveFileDialog = true;
+
+                ImGui::Separator();
+
+                if (ImGui::MenuItem("Exit"))
+                    window.close();
 
                 ImGui::EndMenu();
             }
@@ -353,24 +363,59 @@ int main()
             ImGui::End();
         }
 
+        if (g_saveOptionDialog)
+        {
+            if (Begin("Save Options", &g_saveOptionDialog, ImGuiWindowFlags_Modal))
+            {
+                ImGui::Checkbox("Remove Landmarks", &g_map.fixLandmarks);
+
+                ImGui::Spacing();
+
+                if (ImGui::Button("Save"))
+                {
+                    g_map.saveHMap(g_map.path, g_currentWorkingDirectory);
+                    g_saveOptionDialog = false;
+                }
+
+                ImGui::SameLine();
+
+                if (ImGui::Button("Cancel"))
+                    g_saveOptionDialog = false;
+            }
+            ImGui::End();
+        }
+
         static bool demo = false;
         if (demo)
             ImGui::ShowDemoWindow(&demo);
 
         if (g_openFileDialog)
         {
-            ImGui::OpenPopup("Open .hmap file");
+            ImGui::OpenPopup("Open");
             g_openFileDialog = false;
             SetCurrentDirectory(g_myDocumentsPath.c_str());
         }
+        else if (g_saveFileDialog)
+        {
+            ImGui::OpenPopup("Save");
+            g_saveFileDialog = false;
+            SetCurrentDirectory(g_myDocumentsPath.c_str());
+        }
 
-        if (g_fileDialog.showFileDialog("Open .hmap file", ImGuiFileBrowser::DialogMode::OPEN, ImVec2(float(screenWidth)/2.0f, float(screenHeight)/2.0f), ".hmap"))
+        if (g_fileDialog.showFileDialog("Open", ImGuiFileBrowser::DialogMode::OPEN, ImVec2(float(screenWidth)/2.0f, float(screenHeight)/2.0f), ".hmap"))
         {
             SetCurrentDirectory(g_currentWorkingDirectory.c_str());
             const string newFilePath = g_fileDialog.selected_path;
             g_map.path = newFilePath;
-            g_map.loadMap(g_map.path, g_currentWorkingDirectory);
+            g_map.loadHMap(g_map.path, g_currentWorkingDirectory);
             resetCamera();
+        }
+        else if (g_fileDialog.showFileDialog("Save", ImGuiFileBrowser::DialogMode::SAVE, ImVec2(float(screenWidth) / 2.0f, float(screenHeight) / 2.0f), ".hmap"))
+        {
+            SetCurrentDirectory(g_currentWorkingDirectory.c_str());
+            const string newFilePath = g_fileDialog.selected_path;
+            g_map.path = newFilePath;
+            g_saveOptionDialog = true;
         }
 
         if (needRefresh)

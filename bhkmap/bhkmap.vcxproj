@@ -122,6 +122,7 @@
     <ClInclude Include="..\extern\base64\base64.hpp" />
     <ClInclude Include="..\extern\miniz-cpp\zip_file.hpp" />
     <ClInclude Include="..\extern\stb\stb_image.h" />
+    <ClInclude Include="..\extern\stb\stb_image_write.h" />
     <ClInclude Include="shader\fx.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </ExcludedFromBuild>

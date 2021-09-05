@@ -5,9 +5,13 @@
 #include "zip_file.hpp"
 #include "base64.hpp"
 
-#define STB_IMAGE_IMPLEMENTATION
 #define STBI_ONLY_PNG
+
+#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
 
 #define TERRITORIES_FLAGS_BIOME   0x20
 #define TERRITORIES_FLAGS_WATER   0x40
@@ -194,7 +198,7 @@ void Map::refresh()
                     break;
 
                 case MapBitmap::Territories:
-                    bitmap.quadshader = ShaderManager::add("bhkmap/shader/territories_vs.fx", "bhkmap/shader/territories_ps.fx");
+                    bitmap.quadshader = ShaderManager::add("data/shader/territories_vs.fx", "data/shader/territories_ps.fx");
                     bitmap.quadblend = sf::BlendMode(BlendMode::Factor::SrcAlpha, sf::BlendMode::Factor::OneMinusSrcAlpha, BlendMode::Equation::Add);
                 break;
 
@@ -212,7 +216,7 @@ void Map::refresh()
                     break;
 
                 case MapBitmap::Resources:
-                    bitmap.spriteshader = ShaderManager::add("bhkmap/shader/resources_vs.fx", "bhkmap/shader/resources_ps.fx");
+                    bitmap.spriteshader = ShaderManager::add("data/shader/resources_vs.fx", "data/shader/resources_ps.fx");
                     bitmap.spriteblend = sf::BlendMode(BlendMode::Factor::SrcAlpha, sf::BlendMode::Factor::OneMinusSrcAlpha, BlendMode::Equation::Add);
                     break;
             }
@@ -223,16 +227,16 @@ void Map::refresh()
 //--------------------------------------------------------------------------------------
 u32 * Map::loadTexture(XMLElement * _xmlTerrainSave, const string & _name)
 {
-    XMLElement * xmlElevation = _xmlTerrainSave->FirstChildElement((_name + ".Bytes").c_str());
+    XMLElement * xmlBytes = _xmlTerrainSave->FirstChildElement((_name + ".Bytes").c_str());
     u32 elevationLength = 0;
-    XMLError xmlErr = xmlElevation->QueryUnsignedAttribute("Length", &elevationLength);
+    XMLError xmlErr = xmlBytes->QueryUnsignedAttribute("Length", &elevationLength);
 
-    string elevationData = xmlElevation->FirstChild()->ToText()->Value();
-    base64::decode_inplace(elevationData);
+    string base64encodedData = xmlBytes->FirstChild()->ToText()->Value();
+    base64::decode_inplace(base64encodedData);
     std::vector<ubyte> temp;
     temp.resize(elevationLength);
     for (u32 i = 0; i < elevationLength; ++i)
-        temp[i] = elevationData[i];
+        temp[i] = base64encodedData[i];
 
     int x, y, comp;
     u32 * data = (u32*)stbi_load_from_memory(temp.data(), (int)temp.size(), &x, &y, &comp, 0);
@@ -240,22 +244,29 @@ u32 * Map::loadTexture(XMLElement * _xmlTerrainSave, const string & _name)
 }
 
 //--------------------------------------------------------------------------------------
-void Map::loadMap(const string & _map, const string & _cwd)
+void Map::loadHMap(const string & _map, const string & _cwd)
 {
     // unzip file contents to temp folder
     miniz_cpp::zip_file archive(_map);
-    string tempFolder = _cwd + "\\data\\";
+    string tempFolder = _cwd + "\\tmp\\";
     bool created = CreateDirectory(tempFolder.c_str(), nullptr);
-    tempFolder = _cwd + "\\data\\zip\\";
+    tempFolder = _cwd + "\\tmp\\zip\\";
+    created = CreateDirectory(tempFolder.c_str(), nullptr);
+    tempFolder = _cwd + "\\tmp\\zip\\read\\";
     created = CreateDirectory(tempFolder.c_str(), nullptr);
     archive.extractall(tempFolder);
 
-    // load xml
-    string xmlSave = tempFolder + "Save.hms";
-    tinyxml2::XMLDocument doc;
-    XMLError xmlErr = doc.LoadFile(xmlSave.c_str());
+    XMLError xmlErr;
 
-    XMLElement * xmlDoc = doc.FirstChildElement("Document");
+    // load descriptor
+    string xmlDescriptorFilename = tempFolder + "Descriptor.hmd";
+    xmlErr = xmlDocDescriptor.LoadFile(xmlDescriptorFilename.c_str());
+
+    // load xml
+    string xmlSaveFilename = tempFolder + "Save.hms";
+    xmlErr = xmlDocSave.LoadFile(xmlSaveFilename.c_str());
+
+    XMLElement * xmlDoc = xmlDocSave.FirstChildElement("Document");
     XMLElement * xmlTerrainSave = xmlDoc->FirstChildElement("TerrainSave");
     XMLNode * xmlAuthor = xmlTerrainSave->FirstChildElement("Author")->FirstChild();
     if (xmlAuthor)
@@ -314,4 +325,70 @@ void Map::loadMap(const string & _map, const string & _cwd)
     loaded = true;
 
     refresh();
+}
+
+//--------------------------------------------------------------------------------------
+void Map::saveHMap(string & _map, const string & _cwd)
+{
+    string::size_type idx = _map.rfind('.');
+    string extension;
+    if (idx != string::npos)
+        extension = _map.substr(idx + 1);
+    for (auto c : extension)
+        c = tolower(c);
+    if (extension != "hmap")
+        _map += ".hmap";
+
+    XMLElement * xmlDoc = xmlDocSave.FirstChildElement("Document");
+    XMLElement * xmlTerrainSave = xmlDoc->FirstChildElement("TerrainSave");
+
+    if (fixLandmarks)
+    {
+        XMLNode * xmlLandmarkDatabase = xmlTerrainSave->FirstChildElement("LandmarkDatabase");
+
+        if (xmlLandmarkDatabase)
+        {
+            XMLElement * xmlLandarks = xmlLandmarkDatabase->FirstChildElement("Landmarks");
+            xmlLandarks->DeleteAttribute("Length");
+            xmlLandarks->DeleteChildren();
+            xmlLandarks->SetAttribute("Null", "true");
+        }
+
+        XMLElement * xmlLandmarkBytes = xmlTerrainSave->FirstChildElement("LandmarksTexture.Bytes");
+
+        if (xmlLandmarkBytes)
+        {
+            // 0xFF0000FF png
+            u32 * pixels = (u32*)malloc(width * height * sizeof(u32));
+            
+            for (u32 j = 0; j < height; ++j)
+                for (u32 i = 0; i < width; ++i)
+                    pixels[i + j * width] = 0xFF0000FF;
+
+            int len = 0;
+            ubyte * emptyPng = stbi_write_png_to_mem((const ubyte*)pixels, width * sizeof(u32), width, height, 4, &len);
+            string emptyPngB64 = base64::encode((char*)emptyPng, (size_t)len);
+
+            xmlLandmarkBytes->SetAttribute("Length", len);
+            xmlLandmarkBytes->FirstChild()->SetValue(emptyPngB64.c_str());
+        }
+    }
+
+    string tempFolder = _cwd + "\\tmp\\";
+    bool created = CreateDirectory(tempFolder.c_str(), nullptr);
+    tempFolder = _cwd + "\\tmp\\zip\\";
+    created = CreateDirectory(tempFolder.c_str(), nullptr);
+    tempFolder = _cwd + "\\tmp\\zip\\write\\";
+    created = CreateDirectory(tempFolder.c_str(), nullptr);
+
+    string xmlDescriptorFilename = tempFolder + "Descriptor.hmd";
+    string xmlSaveFilename = tempFolder + "Save.hms";
+
+    xmlDocDescriptor.SaveFile((xmlDescriptorFilename).c_str());
+    xmlDocSave.SaveFile((xmlSaveFilename).c_str());
+
+    miniz_cpp::zip_file archive;
+    archive.write(xmlDescriptorFilename.c_str());
+    archive.write(xmlSaveFilename.c_str());
+    archive.save(_map.c_str());
 }
