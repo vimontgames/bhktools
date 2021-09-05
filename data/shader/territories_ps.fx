@@ -101,5 +101,5 @@ void main()
     gl_FragColor.rgba = edge ? float4(edgeColor, edgeOpacity) : float4(color, territoryOpacity);
 
     if (!visible)
-        gl_FragColor.a = 0;
+        gl_FragColor.a = 0; 
 }

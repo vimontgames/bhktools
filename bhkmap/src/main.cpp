@@ -7,7 +7,7 @@
 #include "resourceinfo.h"
 #include "map.h"
 
-#include "../../data/shader/common.h"
+#include "shader/common.h"
 
 using namespace std;
 using namespace sf;

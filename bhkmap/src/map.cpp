@@ -5,7 +5,7 @@
 #include "zip_file.hpp"
 #include "base64.hpp"
 
-#include "../../data/shader/common.h"
+#include "shader/common.h"
 
 #define STBI_ONLY_PNG
 

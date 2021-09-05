@@ -11,7 +11,9 @@ enum MapBitmap
     Territories,
     Resources,
 
-    Count
+    First = Heightfield,
+    Last = Resources,
+    Count = Last - First + 1
 };
 
 //--------------------------------------------------------------------------------------
@@ -63,7 +65,7 @@ enum class TerritoryBackground : u32
 
     First = None,
     Last = NaturalWonders,
-    Count = Last - First
+    Count = Last - First + 1
 };
 
 //--------------------------------------------------------------------------------------

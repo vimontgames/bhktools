@@ -20,6 +20,8 @@ v0.22
 * Refactor map save
 * Display natural wonders
 
+![ScreenShot0212](doc/img/screen022.png?raw=true "Screenshot022")
+
 v0.21
 -----
 * Save .hmap files

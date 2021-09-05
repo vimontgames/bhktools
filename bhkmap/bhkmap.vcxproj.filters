@@ -38,6 +38,9 @@
     <Filter Include="data\shader">
       <UniqueIdentifier>{80d7ef9f-b7d3-4b54-b117-04cc21698b1b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="data\shader\Shared">
+      <UniqueIdentifier>{64ff588c-7c37-46ad-954b-c9568fc217a0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -126,14 +129,14 @@
     <ClInclude Include="..\extern\stb\stb_image_write.h">
       <Filter>extern\stb</Filter>
     </ClInclude>
+    <ClInclude Include="..\data\shader\common.h">
+      <Filter>data\shader\Shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\data\shader\fx.h">
-      <Filter>data\shader</Filter>
+      <Filter>data\shader\Shared</Filter>
     </ClInclude>
     <ClInclude Include="..\data\shader\hlsl2glsl.h">
-      <Filter>data\shader</Filter>
-    </ClInclude>
-    <ClInclude Include="..\data\shader\common.h">
-      <Filter>data\shader</Filter>
+      <Filter>data\shader\Shared</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

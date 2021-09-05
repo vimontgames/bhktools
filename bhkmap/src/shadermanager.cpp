@@ -74,9 +74,11 @@ sf::Shader * ShaderManager::compile(const char * _vs, const char * _ps, bool _de
 	}
 	else
 	{
+        // shared helpers
 		sf::String fx;
 		fileToString(fx, "data/shader/fx.h");
 
+        // shared uniforms
         sf::String common;
         fileToString(fx, "data/shader/common.h");
 

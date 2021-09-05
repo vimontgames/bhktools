@@ -62,7 +62,8 @@ enum class LuxuryResource
 
     First = Salt,
     Last = Weapon,
-    Count = Last - First
+
+    Count = Last - First + 1
 };
 
 extern ResourceInfo luxuryResources[];
