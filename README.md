@@ -21,7 +21,7 @@ v0.20
 * Display territory biomes
 * Improve shaders
 
-![ScreenShot020](doc/img/screen013.png?raw=true "Screenshot020")
+![ScreenShot020](doc/img/screen020.png?raw=true "Screenshot020")
 
 v0.13
 -----
