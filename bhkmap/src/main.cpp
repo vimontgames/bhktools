@@ -353,7 +353,7 @@ int main()
             ImGui::End();
         }
 
-        static bool demo = true;
+        static bool demo = false;
         if (demo)
             ImGui::ShowDemoWindow(&demo);
 
