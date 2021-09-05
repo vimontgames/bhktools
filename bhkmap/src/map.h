@@ -19,7 +19,15 @@ struct Territory
 {
     u32 continent = 0;
     u32 biome = 0;
-    bool ocean = false;
+    bool ocean = true;
+};
+
+//--------------------------------------------------------------------------------------
+struct Landmark
+{
+    std::string name;
+    u32 definitonIndex = 0;
+    std::vector<sf::Vector2u> positions;
 };
 
 //--------------------------------------------------------------------------------------
@@ -50,15 +58,20 @@ enum class TerritoryBackground : u32
     None = 0,
     Territory,
     Biome,
+    Landmarks,
+    NaturalWonders,
 
     First = None,
-    Last = Biome,
+    Last = NaturalWonders,
     Count = Last - First
 };
 
 //--------------------------------------------------------------------------------------
 struct Map
 {
+    void clearTerritories();
+    void clearLandmarks();
+
     void refresh();
 
     u32 * loadTexture(tinyxml2::XMLElement * _xmlTerrainSave, const std::string & _name);
@@ -75,8 +88,12 @@ struct Map
     std::vector<u32> elevation;
     std::vector<u32> zones;
     std::vector<u32> poi;
+    std::vector<u32> landmarks;
+    std::vector<u32> naturalwonders;
 
     std::vector<Territory> territoriesInfo;
+    std::vector<Landmark> landmarkInfo;
+    std::vector<std::string> naturalWonderNames;
 
     Bitmap bitmaps[MapBitmap::Count];
 
@@ -94,5 +111,6 @@ struct Map
     tinyxml2::XMLDocument xmlDocDescriptor;
     tinyxml2::XMLDocument xmlDocSave;
 
-    bool fixLandmarks = true;
+    bool exportTerritories = false;
+    bool exportLandmarks = false;
 };

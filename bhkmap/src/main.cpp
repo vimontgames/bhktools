@@ -7,12 +7,15 @@
 #include "resourceinfo.h"
 #include "map.h"
 
+#include "../../data/shader/common.h"
+
 using namespace std;
 using namespace sf;
 using namespace ImGui;
 using namespace ImGui::SFML;
 using namespace imgui_addons;
 
+bool g_hasFocus = true;
 u32 screenWidth = 1280;
 u32 screenHeight = 720;
 
@@ -26,7 +29,9 @@ bool g_saveOptionDialog = false;
 
 bool g_openDisplayWindow = true;
 bool g_openInfoWindow = true;
-bool g_openDebugWindow = false;
+bool g_openTerritoriesWindow = true;
+bool g_openLandmarksWindow = true;
+bool g_openDebugWindow = true;
 
 bool g_openHelpWindow = true;
 bool g_openAboutWindow = false;
@@ -92,7 +97,7 @@ int main()
     if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_MYDOCUMENTS, NULL, CSIDL_MYDOCUMENTS, userFolder)))
         g_myDocumentsPath = ws2s(wstring(userFolder)) + "\\Humankind\\Maps";
 
-    RenderWindow window(VideoMode(screenWidth, screenHeight), "bhkmap 0.21");
+    RenderWindow window(VideoMode(screenWidth, screenHeight), "bhkmap 0.22");
     window.setFramerateLimit(60);
     Init(window);
 
@@ -114,12 +119,16 @@ int main()
         {
             ProcessEvent(event);
 
-            if (event.type == Event::Closed) 
+            if (event.type == Event::Closed)
                 window.close();
+            else if (event.type == sf::Event::GainedFocus)
+                g_hasFocus = true;
+            else if (event.type == sf::Event::LostFocus)
+                g_hasFocus = false;
 
             if (event.type == sf::Event::MouseWheelMoved)
             {
-                if (Keyboard::isKeyPressed(Keyboard::LControl) || Keyboard::isKeyPressed(Keyboard::RControl))
+                if (!IsWindowHovered(ImGuiHoveredFlags_AnyWindow) && !IsWindowFocused(ImGuiHoveredFlags_AnyWindow) && g_hasFocus)
                     g_mouseWheelDelta = (float)event.mouseWheel.delta;
             }
         }
@@ -168,6 +177,12 @@ int main()
                 if (ImGui::MenuItem("Info"))
                     g_openInfoWindow = true;
 
+                if (ImGui::MenuItem("Landmarks"))
+                    g_openLandmarksWindow = true;
+
+                if (ImGui::MenuItem("Territories"))
+                    g_openTerritoriesWindow = true;
+
                 ImGui::Separator();
 
                 if (ImGui::MenuItem("Debug"))
@@ -198,15 +213,18 @@ int main()
         {
             if (Begin("Help", &g_openHelpWindow))
             {
+
                 ImGui::Columns(2, "mycolumns2", false);
                 {
+                    SetColumnWidth(0, 64.0f);
+
                     ImGui::Text("Pan");
                     ImGui::Text("Zoom");
                 }
                 ImGui::NextColumn();
                 {
                     ImGui::Text("Left Mouse Button");
-                    ImGui::Text("Ctrl + Mouse Wheel");
+                    ImGui::Text("Mouse Wheel");
                 }             
             }
             ImGui::End();
@@ -249,16 +267,19 @@ int main()
 
                 ImGui::Columns(1);
 
-                ImGui::TreeNodeEx("View", ImGuiTreeNodeFlags_DefaultOpen);
+                TreeNodeEx("View", ImGuiTreeNodeFlags_DefaultOpen);
                 {
-                    ImGui::Columns(2, "mycolumns2", false);
+                    Columns(2, "mycolumns2", false);
                     {
+                        ImGui::Text("HasFocus");
                         ImGui::Text("Offset");
                         ImGui::Text("Zoom");
                     }
 
-                    ImGui::NextColumn();
+                    NextColumn();
                     {
+                        ImGui::Text(g_hasFocus ? "true" : "false");
+
                         char tmp[256];
                         sprintf_s(tmp, "%.1f, %.1f", g_cameraOffset.x, g_cameraOffset.y);
                         ImGui::Text(tmp);
@@ -267,7 +288,7 @@ int main()
                         ImGui::Text(tmp);
                     }
                 }
-                ImGui::TreePop();
+                TreePop();
             }
 
             ImGui::End();
@@ -279,6 +300,8 @@ int main()
             {
                 ImGui::Columns(2, "mycolumns2", false);  // 2-ways, no border
                 {
+                    SetColumnWidth(0, 64.0f);
+
                     ImGui::Text("Author");
                     ImGui::Text("Width");
                     ImGui::Text("Height");
@@ -289,20 +312,69 @@ int main()
                     ImGui::Text(to_string(g_map.width).c_str());
                     ImGui::Text(to_string(g_map.height).c_str());
                 }
-
-                ImGui::Columns(1);
-                ImGui::Separator();
-
-                ImGui::Columns(2, "mycolumns2", false); 
-                {
-                    ImGui::Text("Territories");
-                }
-                ImGui::NextColumn();
-                {
-                    ImGui::Text("%u", g_map.territoriesInfo.size());
-                }
             }
 
+            ImGui::End();
+        }
+
+        if (g_openTerritoriesWindow)
+        {
+            if (Begin("Territories", &g_openTerritoriesWindow))
+            {
+                if (ImGui::Button(("Remove all territories (" + to_string(g_map.territoriesInfo.size()) + ")").c_str()))
+                    g_map.clearTerritories();
+
+                for (u32 i = 0; i < g_map.territoriesInfo.size(); ++i)
+                {
+                    if (TreeNodeEx(to_string(i).c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+                    {
+                        PushItemWidth(132);
+
+                        auto & territory = g_map.territoriesInfo[i];
+                        
+                        needRefresh |= Combo("Continent", (int*)&territory.continent, "Ocean\0Continent 1\0Continent 2\0Continent 3\0Continent 4\0Continent 5\0Continent 6\0Continent 7\0");
+                        needRefresh |= Combo("Biome", (int*)&territory.biome, "Arctic\0Badlands\0Desert\0Grassland\0Meditarranean\0Savanna\0Taiga\0Temperate\0Tropical\0Tundra\0\0");
+
+                        territory.ocean = territory.continent == 0;
+                        PopItemWidth();
+                    }
+                    TreePop();
+                }
+            }
+            ImGui::End();
+        }
+
+        if (g_openLandmarksWindow)
+        {
+            if (Begin("Landmarks", &g_openLandmarksWindow))
+            {
+                if (ImGui::Button( ("Remove all landmarks (" + to_string(g_map.landmarkInfo.size()) + ")").c_str()))
+                    g_map.clearLandmarks();
+
+                for (u32 i = 0; i < g_map.landmarkInfo.size(); ++i)
+                {
+                    if (TreeNodeEx(to_string(i).c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+                    {
+                        PushItemWidth(132);
+
+                        auto & landmark = g_map.landmarkInfo[i];
+
+                        char buffer[1024];
+                        sprintf_s(buffer, landmark.name.c_str());
+                        bool changed = ImGui::InputText("Name", buffer, 1024);
+                        if (changed)
+                        {
+                            landmark.name = buffer;
+                            needRefresh = true;
+                        }
+                        
+                        needRefresh |= Combo("Definition", (int*)&landmark.definitonIndex, "Desert\0Forest\0Lake\0Mountain\0River\0\0");
+
+                        PopItemWidth();
+                    }
+                    TreePop();
+                }
+            }
             ImGui::End();
         }
 
@@ -312,10 +384,10 @@ int main()
             {
                 const u32 textLen = 10;
 
-                if (TreeNodeEx("Territories", ImGuiTreeNodeFlags_DefaultOpen))
+                if (TreeNodeEx("Map", ImGuiTreeNodeFlags_DefaultOpen))
                 {
-                    PushItemWidth(80);
-                    needRefresh |= Combo("Display", (int*)&g_map.territoryBackground, "None\0Index\0Biome\0\0");
+                    PushItemWidth(132);
+                    needRefresh |= Combo("Filter", (int*)&g_map.territoryBackground, "None\0Territories\0Biomes\0Landmarks\0Natural Wonders\0\0");
                     PopItemWidth();
 
                     needRefresh |= Checkbox(getFixedSizeString("Borders", textLen).c_str(), &g_map.showTerritoriesBorders);
@@ -365,9 +437,24 @@ int main()
 
         if (g_saveOptionDialog)
         {
-            if (Begin("Save Options", &g_saveOptionDialog, ImGuiWindowFlags_Modal))
+            ImGui::OpenPopup("Select the changes to export");
+
+            if (ImGui::BeginPopupModal("Select the changes to export", &g_saveOptionDialog))
             {
-                ImGui::Checkbox("Remove Landmarks", &g_map.fixLandmarks);
+                PushTextWrapPos();
+
+                ImGui::Text("Categories that are not selected here will not reflect the changes made and will be exported with their original values.");
+                
+                ImGui::Separator();
+
+                ImGui::Text("Example:\nIn order to fix a map corrupted by adding landmarks in the official editor, you have to remove them using the \"Clear All Landmarks\" button from the \"Landmarks\" tab then select \"Modify landmarks\" and click \"Save\".");
+
+                PopTextWrapPos();
+
+                ImGui::Separator();
+
+                ImGui::Checkbox("Modify territories", &g_map.exportTerritories);
+                ImGui::Checkbox("Modify landmarks", &g_map.exportLandmarks);                
 
                 ImGui::Spacing();
 
@@ -381,8 +468,9 @@ int main()
 
                 if (ImGui::Button("Cancel"))
                     g_saveOptionDialog = false;
+
+                ImGui::EndPopup();
             }
-            ImGui::End();
         }
 
         static bool demo = false;
@@ -425,7 +513,7 @@ int main()
         const float panSpeed = 1.0f;
         const float zoomSpeed = 1.1f;
 
-        if (Mouse::isButtonPressed(Mouse::Left))
+        if (Mouse::isButtonPressed(Mouse::Left) && !IsWindowHovered(ImGuiHoveredFlags_AnyWindow) && !IsWindowFocused(ImGuiHoveredFlags_AnyWindow) && g_hasFocus)
         {
             if (!g_cameraPan)
             {
@@ -489,7 +577,36 @@ int main()
                     {
                         shader->setUniform("texSize", (Vector2f)texture.getSize());
                         shader->setUniform("screenSize", Vector2f(float(screenWidth), float(screenHeight)));
-                        shader->setUniform("borders", g_map.showTerritoriesBorders);
+
+                        int passFlags = 0;
+
+                        switch (g_map.territoryBackground)
+                        {
+                            default:
+                            case TerritoryBackground::None:
+                            break;
+
+                            case TerritoryBackground::Territory:
+                                passFlags = PASS_FLAG_TERRITORY;
+                            break;
+
+                            case TerritoryBackground::Biome:
+                                passFlags = PASS_FLAG_BIOME;
+                            break;
+
+                            case TerritoryBackground::Landmarks:
+                                passFlags = PASS_FLAG_LANDMARK;
+                            break;
+
+                            case TerritoryBackground::NaturalWonders:
+                                passFlags = PASS_FLAG_NATURALWONDER;
+                            break;
+                        }
+
+                        if (g_map.showTerritoriesBorders)
+                            passFlags |= PASS_FLAG_BORDERS;
+
+                        shader->setUniform("passFlags", passFlags);
                     }
                     
                     window.draw(sprite, rs);

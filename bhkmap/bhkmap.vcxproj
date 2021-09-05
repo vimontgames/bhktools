@@ -119,22 +119,13 @@
     <None Include="..\README.md" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\data\shader\common.h" />
+    <ClInclude Include="..\data\shader\fx.h" />
+    <ClInclude Include="..\data\shader\hlsl2glsl.h" />
     <ClInclude Include="..\extern\base64\base64.hpp" />
     <ClInclude Include="..\extern\miniz-cpp\zip_file.hpp" />
     <ClInclude Include="..\extern\stb\stb_image.h" />
     <ClInclude Include="..\extern\stb\stb_image_write.h" />
-    <ClInclude Include="shader\fx.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="shader\hlsl2glsl.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </ExcludedFromBuild>
-    </ClInclude>
     <ClInclude Include="src\colorfloat4.h" />
     <ClInclude Include="src\guistyle.h" />
     <ClInclude Include="src\map.h" />
@@ -145,32 +136,22 @@
     <ClInclude Include="src\stringconvert.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="shader\default_ps.fx">
+    <None Include="..\data\shader\default_ps.fx">
       <FileType>Document</FileType>
     </None>
-    <None Include="shader\default_vs.fx">
+    <None Include="..\data\shader\default_vs.fx">
       <FileType>Document</FileType>
     </None>
-    <None Include="shader\territories_ps.fx">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </ExcludedFromBuild>
+    <None Include="..\data\shader\resources_ps.fx">
       <FileType>Document</FileType>
     </None>
-    <None Include="shader\territories_vs.fx">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </ExcludedFromBuild>
+    <None Include="..\data\shader\resources_vs.fx">
       <FileType>Document</FileType>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="shader\resources_ps.fx">
+    <None Include="..\data\shader\territories_ps.fx">
       <FileType>Document</FileType>
     </None>
-    <None Include="shader\resources_vs.fx">
+    <None Include="..\data\shader\territories_vs.fx">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

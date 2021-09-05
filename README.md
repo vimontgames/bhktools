@@ -14,6 +14,12 @@ SFML=G:\SFML\SFML-2.5.1
 
 # Changelog
 
+v0.22
+-----
+* Refactor shaders (per-texel vs. global flags)
+* Refactor map save
+* Display natural wonders
+
 v0.21
 -----
 * Save .hmap files

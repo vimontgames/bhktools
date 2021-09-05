@@ -32,8 +32,11 @@
     <Filter Include="extern\stb">
       <UniqueIdentifier>{a0474975-525a-456a-a4d5-7a7758acc008}</UniqueIdentifier>
     </Filter>
-    <Filter Include="shader">
-      <UniqueIdentifier>{0f92c5e1-e24a-4b80-aab4-ced68f180d41}</UniqueIdentifier>
+    <Filter Include="data">
+      <UniqueIdentifier>{86ce2a81-15d7-4f0b-ac2f-64243363d573}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="data\shader">
+      <UniqueIdentifier>{80d7ef9f-b7d3-4b54-b117-04cc21698b1b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -85,18 +88,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />
-    <None Include="shader\default_ps.fx">
-      <Filter>shader</Filter>
-    </None>
-    <None Include="shader\default_vs.fx">
-      <Filter>shader</Filter>
-    </None>
-    <None Include="shader\territories_ps.fx">
-      <Filter>shader</Filter>
-    </None>
-    <None Include="shader\territories_vs.fx">
-      <Filter>shader</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\extern\miniz-cpp\zip_file.hpp">
@@ -129,25 +120,40 @@
     <ClInclude Include="src\precomp.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="shader\fx.h">
-      <Filter>shader</Filter>
-    </ClInclude>
-    <ClInclude Include="shader\hlsl2glsl.h">
-      <Filter>shader</Filter>
-    </ClInclude>
     <ClInclude Include="src\shadermanager.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\extern\stb\stb_image_write.h">
       <Filter>extern\stb</Filter>
     </ClInclude>
+    <ClInclude Include="..\data\shader\fx.h">
+      <Filter>data\shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\data\shader\hlsl2glsl.h">
+      <Filter>data\shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\data\shader\common.h">
+      <Filter>data\shader</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="shader\resources_ps.fx">
-      <Filter>shader</Filter>
+    <FxCompile Include="..\data\shader\default_ps.fx">
+      <Filter>data\shader</Filter>
     </FxCompile>
-    <FxCompile Include="shader\resources_vs.fx">
-      <Filter>shader</Filter>
+    <FxCompile Include="..\data\shader\default_vs.fx">
+      <Filter>data\shader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\data\shader\resources_ps.fx">
+      <Filter>data\shader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\data\shader\resources_vs.fx">
+      <Filter>data\shader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\data\shader\territories_ps.fx">
+      <Filter>data\shader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\data\shader\territories_vs.fx">
+      <Filter>data\shader</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

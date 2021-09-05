@@ -1,12 +1,6 @@
 uniform sampler2D texture;
 uniform float2 texSize;
 uniform float2 screenSize;
-uniform uint flags;
-uniform bool borders;
-
-#define TERRITORIES_FLAGS_BIOME   0x20
-#define TERRITORIES_FLAGS_WATER   0x40
-#define TERRITORIES_FLAGS_VISIBLE 0x80
 
 void main()
 {
@@ -26,7 +20,7 @@ void main()
     float4 bottomLeft  = texture2D(texture, uv + float2(-invScreenSize.x, -invScreenSize.y));
     float4 bottomRight = texture2D(texture, uv + float2(+invScreenSize.x, -invScreenSize.y));
 
-    bool edge = borders && ((left.a != center.a) || (right.a != center.a) || (bottom.a != center.a) || (up.a != center.a) || (topLeft.a != center.a) || (topRight.a != center.a) || (bottomLeft.a != center.a) || (bottomRight.a != center.a));
+    bool edge = (0 != (PASS_FLAG_BORDERS & passFlags)) && ((left.a != center.a) || (right.a != center.a) || (bottom.a != center.a) || (up.a != center.a) || (topLeft.a != center.a) || (topRight.a != center.a) || (bottomLeft.a != center.a) || (bottomRight.a != center.a));
    
     float territoryOpacity = 0.5f;
     float edgeOpacity = 0.75f;
@@ -55,24 +49,52 @@ void main()
         float3(0.6,0.7,0.6)
     };
 
-    int index = int(center.a * 255.0f);
-    uint flags = int(center.b * 255.0f);
+    // Desert\0Forest\0Lake\0Mountain\0River
+    float3 landmarkColors[5] =
+    {
+        float3(1,1,0),
+        float3(0,1,0),
+        float3(0,0,1),
+        float3(0.5, 0.25, 0),
+        float3(0.5,0.5,1.0)
+    };
 
+    uint4 index = uint4(center.rgba * 255.0f);
+    
+    uint biomeIndex = index.g;
+    uint landmarkIndex = index.g;
+    uint flags = index.b;
+    uint territoryIndex = index.a;
+    
     float3 color = float3(0,0,0);
+    
+    switch (passFlags & 0xF)
+    {
+        default:
+            color = center.g;
+            break;
 
-    if (TERRITORIES_FLAGS_BIOME & flags)
-        color = biomeColors[index % 10];
-    else
-        color = territoryColor[index % 6];
+        case PASS_FLAG_TERRITORY:
+            color = territoryColor[territoryIndex % 6];
+            break;
+    
+        case PASS_FLAG_LANDMARK:
+            color = landmarkColors[landmarkIndex % 5];
+            break;
+    
+        case PASS_FLAG_BIOME:
+            color = biomeColors[biomeIndex % 10];
+            break;
+    }     
        
     float3 edgeColor = float3(1, 1, 1);
     
-    bool visible = 0 != (flags & TERRITORIES_FLAGS_VISIBLE);
-    bool water = 0 != (flags & TERRITORIES_FLAGS_WATER);
-
+    bool visible = 0 != (flags & TEXEL_FLAG_VISIBLE);
+    bool water = 0 != (flags & TEXEL_FLAG_WATER);
+    
     if (water)
     {
-        color = float3(0, 0, 1);
+        color = lerp(color, float3(0, 0, 1), 0.75f);
         edgeColor = float3(0, 0, 1);
     }
 

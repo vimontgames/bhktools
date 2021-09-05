@@ -77,8 +77,11 @@ sf::Shader * ShaderManager::compile(const char * _vs, const char * _ps, bool _de
 		sf::String fx;
 		fileToString(fx, "data/shader/fx.h");
 
-		vs = header + fx + vs;
-		ps = header + fx + ps;
+        sf::String common;
+        fileToString(fx, "data/shader/common.h");
+
+        vs = header + fx + common + vs;
+        ps = header + fx + common + ps;
 	}
 
 	sf::Shader * shader = new sf::Shader();

@@ -5,6 +5,8 @@
 #include "zip_file.hpp"
 #include "base64.hpp"
 
+#include "../../data/shader/common.h"
+
 #define STBI_ONLY_PNG
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -12,10 +14,6 @@
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
-
-#define TERRITORIES_FLAGS_BIOME   0x20
-#define TERRITORIES_FLAGS_WATER   0x40
-#define TERRITORIES_FLAGS_VISIBLE 0x80
 
 using namespace std;
 using namespace sf;
@@ -94,7 +92,11 @@ void Map::refresh()
             const Territory territory = territoriesInfo[territoryIndex];
             Color territoryColor = Color(0, 0, 0, 255);
 
-            u32 flags = 0;
+            // Landmarks
+            const ubyte landmarkIndex = landmarks[offset];
+
+            // Natural Wonders
+            const ubyte naturalWonderIndex = naturalwonders[offset];
 
             switch (territoryBackground)
             {
@@ -103,26 +105,57 @@ void Map::refresh()
 
                 case TerritoryBackground::Territory:
                 {
-                    territoryColor.a = territoryIndex;
-
-                    if (territory.ocean)
-                        flags |= TERRITORIES_FLAGS_WATER;
- 
-                    flags |= TERRITORIES_FLAGS_VISIBLE;
+                    territoryColor.r = 0;
+                    territoryColor.g = territoryIndex;
+                    territoryColor.b = TEXEL_FLAG_VISIBLE;
+                    territoryColor.a = territoryIndex;                    
                 }
                 break;
 
                 case TerritoryBackground::Biome:
                 {
                     u32 biomeIndex = territory.biome;
-                    territoryColor.a = biomeIndex;
 
-                    flags |= TERRITORIES_FLAGS_VISIBLE | TERRITORIES_FLAGS_BIOME;
+                    territoryColor.r = 0;
+                    territoryColor.g = biomeIndex;
+                    territoryColor.b = TEXEL_FLAG_VISIBLE;
+                    territoryColor.a = territoryIndex;
                 }
                 break;
-            }         
 
-            territoryColor.b = flags;
+                case TerritoryBackground::Landmarks:
+                {
+                    if (0xFF != landmarkIndex)
+                    {
+                        // There's a bug in the map editor that makes not all landmarks are actually saved
+                        if (landmarkIndex < landmarkInfo.size())
+                        {
+                            const Landmark landmark = landmarkInfo[landmarkIndex];
+
+                            territoryColor.r = 0;
+                            territoryColor.g = landmark.definitonIndex;
+                            territoryColor.b = TEXEL_FLAG_VISIBLE;
+                            territoryColor.a = landmarkIndex;
+                        }
+                    }
+                }
+                break;
+
+                case TerritoryBackground::NaturalWonders:
+                {
+                    if (0xFF != (naturalWonderIndex & 0xFF))
+                    {
+                        territoryColor.r = 0;
+                        territoryColor.g = naturalWonderIndex;
+                        territoryColor.b = TEXEL_FLAG_VISIBLE;
+                        territoryColor.a = landmarkIndex;
+                    }
+                }
+                break;
+            }    
+
+            if (territory.ocean)
+                territoryColor.b |= TEXEL_FLAG_WATER;
             
             territories.image.setPixel(w, h, territoryColor);
 
@@ -282,12 +315,16 @@ void Map::loadHMap(const string & _map, const string & _cwd)
     const u32 * elevation = loadTexture(xmlTerrainSave, "ElevationTexture");
     const u32 * zones = loadTexture(xmlTerrainSave, "ZonesTexture");
     const u32 * poi = loadTexture(xmlTerrainSave, "POITexture");
+    const u32 * landmarks = loadTexture(xmlTerrainSave, "LandmarksTexture");
+    const u32 * naturalwonders = loadTexture(xmlTerrainSave, "NaturalWonderTexture");
 
     const u32 totalSize = width*height;
 
     this->elevation.resize(totalSize);
     this->zones.resize(totalSize);
     this->poi.resize(totalSize);
+    this->landmarks.resize(totalSize);
+    this->naturalwonders.resize(totalSize);
 
     for (u32 j = 0; j < height; ++j)
     {
@@ -297,29 +334,90 @@ void Map::loadHMap(const string & _map, const string & _cwd)
             this->elevation[offset] = elevation[offset];
             this->zones[offset] = zones[offset];
             this->poi[offset] = poi[offset];
+            this->landmarks[offset] = landmarks[offset];
+            this->naturalwonders[offset] = naturalwonders[offset];
         }
     }
 
-    XMLNode * xmlTerritoryDatabase = xmlTerrainSave->FirstChildElement("TerritoryDatabase");
-    XMLElement * xmlTerritories = xmlTerritoryDatabase->FirstChildElement("Territories");
-    u32 territoryCount = 0;
-    xmlErr = xmlTerritories->QueryUnsignedAttribute("Length", &territoryCount);
-
-    territoriesInfo.clear();
-    territoriesInfo.reserve(territoryCount);
-
-    XMLElement * xmlTerritory = xmlTerritories->FirstChildElement("Item")->ToElement();
-    while (xmlTerritory)
+    // load natural wonders info
     {
-        Territory territory;
+        XMLElement * xmlNaturalWonderNames = xmlTerrainSave->FirstChildElement("NaturalWonderNames");
+        u32 naturalWonderNameCount = 0;
+        xmlErr = xmlNaturalWonderNames->QueryUnsignedAttribute("Length", &naturalWonderNameCount);
 
-        xmlErr = xmlTerritory->FirstChildElement("ContinentIndex")->ToElement()->QueryUnsignedText(&territory.continent);
-        xmlErr = xmlTerritory->FirstChildElement("Biome")->ToElement()->QueryUnsignedText(&territory.biome);
-        xmlErr = xmlTerritory->FirstChildElement("IsOcean")->ToElement()->QueryBoolText(&territory.ocean);
+        naturalWonderNames.clear();
+        naturalWonderNames.reserve(naturalWonderNameCount);
 
-        territoriesInfo.push_back(territory);
+        XMLNode * xmlWonderNameNode = xmlNaturalWonderNames->FirstChildElement("String");
 
-        xmlTerritory = xmlTerritory->NextSiblingElement("Item");
+        while (xmlWonderNameNode)
+        {
+            string name = xmlWonderNameNode->FirstChild()->ToText()->Value();
+            
+            naturalWonderNames.push_back(name);
+
+            xmlWonderNameNode = xmlWonderNameNode->NextSiblingElement("String");
+        }
+    }
+
+    // load territories info
+    {
+        XMLNode * xmlTerritoryDatabase = xmlTerrainSave->FirstChildElement("TerritoryDatabase");
+        XMLElement * xmlTerritories = xmlTerritoryDatabase->FirstChildElement("Territories");
+        u32 territoryCount = 0;
+        xmlErr = xmlTerritories->QueryUnsignedAttribute("Length", &territoryCount);
+
+        territoriesInfo.clear();
+        territoriesInfo.reserve(territoryCount);
+
+        XMLNode * xmlTerritoryNode = xmlTerritories->FirstChildElement("Item");
+
+        if (xmlTerritoryNode)
+        {
+            XMLElement * xmlTerritory = xmlTerritoryNode->ToElement();
+            while (xmlTerritory)
+            {
+                Territory territory;
+
+                xmlErr = xmlTerritory->FirstChildElement("ContinentIndex")->ToElement()->QueryUnsignedText(&territory.continent);
+                xmlErr = xmlTerritory->FirstChildElement("Biome")->ToElement()->QueryUnsignedText(&territory.biome);
+                xmlErr = xmlTerritory->FirstChildElement("IsOcean")->ToElement()->QueryBoolText(&territory.ocean);
+
+                territoriesInfo.push_back(territory);
+
+                xmlTerritory = xmlTerritory->NextSiblingElement("Item");
+            }
+        }
+    }
+
+    // load landmarks info
+    {
+        XMLNode * xmlLandmarkDatabase = xmlTerrainSave->FirstChildElement("LandmarkDatabase");
+        XMLElement * xmlLandmarks = xmlLandmarkDatabase->FirstChildElement("Landmarks");
+        u32 landmarkCount = 0;
+        xmlErr = xmlLandmarks->QueryUnsignedAttribute("Length", &landmarkCount);
+
+        landmarkInfo.clear();
+        landmarkInfo.reserve(landmarkCount);
+
+        XMLNode * xmlLandmarkNode = xmlLandmarks->FirstChildElement("Item");
+
+        if (xmlLandmarkNode)
+        {
+            XMLElement * xmlLandmark = xmlLandmarkNode->ToElement();
+
+            while (xmlLandmark)
+            {
+                Landmark landmark;
+
+                landmark.name = xmlLandmark->FirstChildElement("Name")->FirstChild()->ToText()->Value();
+                xmlErr = xmlLandmark->FirstChildElement("DefinitionIndex")->ToElement()->QueryUnsignedText(&landmark.definitonIndex);
+
+                landmarkInfo.push_back(landmark);
+
+                xmlLandmark = xmlLandmark->NextSiblingElement("Item");
+            }
+        }
     }
 
     loaded = true;
@@ -342,16 +440,24 @@ void Map::saveHMap(string & _map, const string & _cwd)
     XMLElement * xmlDoc = xmlDocSave.FirstChildElement("Document");
     XMLElement * xmlTerrainSave = xmlDoc->FirstChildElement("TerrainSave");
 
-    if (fixLandmarks)
+    if (exportLandmarks)
     {
         XMLNode * xmlLandmarkDatabase = xmlTerrainSave->FirstChildElement("LandmarkDatabase");
 
         if (xmlLandmarkDatabase)
         {
-            XMLElement * xmlLandarks = xmlLandmarkDatabase->FirstChildElement("Landmarks");
-            xmlLandarks->DeleteAttribute("Length");
-            xmlLandarks->DeleteChildren();
-            xmlLandarks->SetAttribute("Null", "true");
+            if (landmarkInfo.empty())
+            {
+
+                XMLElement * xmlLandarks = xmlLandmarkDatabase->FirstChildElement("Landmarks");
+                xmlLandarks->DeleteAttribute("Length");
+                xmlLandarks->DeleteChildren();
+                xmlLandarks->SetAttribute("Null", "true");
+            }
+            else
+            {
+                assert(!"todo");
+            }
         }
 
         XMLElement * xmlLandmarkBytes = xmlTerrainSave->FirstChildElement("LandmarksTexture.Bytes");
@@ -359,14 +465,14 @@ void Map::saveHMap(string & _map, const string & _cwd)
         if (xmlLandmarkBytes)
         {
             // 0xFF0000FF png
-            u32 * pixels = (u32*)malloc(width * height * sizeof(u32));
-            
-            for (u32 j = 0; j < height; ++j)
-                for (u32 i = 0; i < width; ++i)
-                    pixels[i + j * width] = 0xFF0000FF;
+            //u32 * pixels = (u32*)malloc(width * height * sizeof(u32));
+            //
+            //for (u32 j = 0; j < height; ++j)
+            //    for (u32 i = 0; i < width; ++i)
+            //        pixels[i + j * width] = 0xFF0000FF;
 
             int len = 0;
-            ubyte * emptyPng = stbi_write_png_to_mem((const ubyte*)pixels, width * sizeof(u32), width, height, 4, &len);
+            ubyte * emptyPng = stbi_write_png_to_mem((const ubyte*)landmarks.data(), width * sizeof(u32), width, height, 4, &len);
             string emptyPngB64 = base64::encode((char*)emptyPng, (size_t)len);
 
             xmlLandmarkBytes->SetAttribute("Length", len);
@@ -391,4 +497,43 @@ void Map::saveHMap(string & _map, const string & _cwd)
     archive.write(xmlDescriptorFilename.c_str());
     archive.write(xmlSaveFilename.c_str());
     archive.save(_map.c_str());
+}
+
+//--------------------------------------------------------------------------------------
+// Set all landmarks to 'invalid' 0xFF
+//--------------------------------------------------------------------------------------
+void Map::clearLandmarks()
+{
+    landmarkInfo.clear();
+
+    for (u32 j = 0; j < height; ++j)
+    {
+        for (u32 i = 0; i < width; ++i)
+        {
+            const u32 offset = i + j * width;
+            landmarks[offset] = 0xFF0000FF;
+        }
+    }
+    refresh();
+}
+
+//--------------------------------------------------------------------------------------
+// Keep only territory 0
+//--------------------------------------------------------------------------------------
+void Map::clearTerritories()
+{
+    territoriesInfo.clear();
+
+    Territory empty;
+    territoriesInfo.push_back(empty);
+
+    for (u32 j = 0; j < height; ++j)
+    {
+        for (u32 i = 0; i < width; ++i)
+        {
+            const u32 offset = i + j * width;
+            zones[offset] = 0x00000000;
+        }
+    }
+    refresh();
 }
