@@ -25,7 +25,8 @@ enum class StrategicResource
     Uranium,
 
     First = Horse,
-    Last = Uranium
+    Last = Uranium,
+    Count = Last-First
 };
 
 //--------------------------------------------------------------------------------------
@@ -60,7 +61,8 @@ enum class LuxuryResource
     Weapon,
 
     First = Salt,
-    Last = Weapon
+    Last = Weapon,
+    Count = Last - First
 };
 
 extern ResourceInfo luxuryResources[];

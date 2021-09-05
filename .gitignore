@@ -1,7 +1,6 @@
 *.user
 .vs/*
 enc_temp_folder/*
-data/*
 tmp/*
 *.ilk
 *.pdb
@@ -9,4 +8,5 @@ tmp/*
 *.iobj
 *.ipdb
 *.hms
+*.hmd
 lib/*

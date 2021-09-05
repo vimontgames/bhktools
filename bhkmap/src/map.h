@@ -1,6 +1,7 @@
 #pragma once
 
 #include "shadermanager.h"
+#include "resourceinfo.h"
 
 //--------------------------------------------------------------------------------------
 enum MapBitmap
@@ -29,8 +30,15 @@ struct Bitmap
     sf::Image image;
     sf::Texture texture;
 
-    ShaderID shader = invalidShaderID;
-    sf::BlendMode blend = { sf::BlendMode::Factor::One, sf::BlendMode::Factor::Zero, sf::BlendMode::Add };
+    bool drawQuad = true;
+    ShaderID quadshader = invalidShaderID;
+    sf::BlendMode quadblend = { sf::BlendMode::Factor::One, sf::BlendMode::Factor::Zero, sf::BlendMode::Add };
+
+    bool drawSprites = false;
+
+    std::vector<sf::Sprite> sprites;
+    ShaderID spriteshader = invalidShaderID;
+    sf::BlendMode spriteblend = { sf::BlendMode::Factor::One, sf::BlendMode::Factor::Zero, sf::BlendMode::Add };
 
     float alpha = 1.0f;
 };
@@ -39,6 +47,17 @@ namespace tinyxml2
 {
     class XMLElement;
 }
+
+enum class TerritoryBackground : u32
+{
+    None = 0,
+    Territory,
+    Biome,
+
+    First = None,
+    Last = Biome,
+    Count = Last - First
+};
 
 //--------------------------------------------------------------------------------------
 struct Map
@@ -58,14 +77,17 @@ struct Map
 
     bool loaded = false;
     
-    bool showOceanTerritories = false;
-    bool showLandTerritories = true;
+    TerritoryBackground territoryBackground = TerritoryBackground::Territory;
     bool showTerritoriesBorders = true;
 
     bool showStrategicResources = false;
     bool showLuxuryResources = false;
 
     void refresh();
+
     u32 * loadTexture(tinyxml2::XMLElement * _xmlTerrainSave, const std::string & _name);
     void loadMap(const std::string & _map, const std::string & _cwd);
+
+    sf::Texture strategicResourceTextures[(u32)StrategicResource::Count];
+    sf::Texture luxuryResourceTextures[(u32)LuxuryResource::Count];
 };

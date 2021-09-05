@@ -85,6 +85,18 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />
+    <None Include="shader\default_ps.fx">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\default_vs.fx">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\territories_ps.fx">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\territories_vs.fx">
+      <Filter>shader</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\extern\miniz-cpp\zip_file.hpp">
@@ -128,16 +140,10 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="shader\territories_ps.fx">
+    <FxCompile Include="shader\resources_ps.fx">
       <Filter>shader</Filter>
     </FxCompile>
-    <FxCompile Include="shader\territories_vs.fx">
-      <Filter>shader</Filter>
-    </FxCompile>
-    <FxCompile Include="shader\default_ps.fx">
-      <Filter>shader</Filter>
-    </FxCompile>
-    <FxCompile Include="shader\default_vs.fx">
+    <FxCompile Include="shader\resources_vs.fx">
       <Filter>shader</Filter>
     </FxCompile>
   </ItemGroup>

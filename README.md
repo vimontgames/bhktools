@@ -14,6 +14,15 @@ SFML=G:\SFML\SFML-2.5.1
 
 # Changelog
 
+v0.20
+-----
+* Display resource icons
+* Change mouse pan to left button to match the in-game editor
+* Display territory biomes
+* Improve shaders
+
+![ScreenShot020](doc/img/screen013.png?raw=true "Screenshot020")
+
 v0.13
 -----
 * Add shader manager

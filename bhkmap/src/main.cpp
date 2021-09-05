@@ -90,7 +90,7 @@ int main()
     if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_MYDOCUMENTS, NULL, CSIDL_MYDOCUMENTS, userFolder)))
         g_myDocumentsPath = ws2s(wstring(userFolder)) + "\\Humankind\\Maps";
 
-    RenderWindow window(VideoMode(screenWidth, screenHeight), "bhkmap 0.13");
+    RenderWindow window(VideoMode(screenWidth, screenHeight), "bhkmap 0.2");
     window.setFramerateLimit(60);
     Init(window);
 
@@ -304,17 +304,13 @@ int main()
 
                 if (TreeNodeEx("Territories", ImGuiTreeNodeFlags_DefaultOpen))
                 {
-                    needRefresh |= Checkbox(getFixedSizeString("Ocean", textLen).c_str(), &g_map.showOceanTerritories);
-                    ImGui::SameLine();
-                    needRefresh |= Checkbox(getFixedSizeString("Land", textLen).c_str(), &g_map.showLandTerritories);
+                    PushItemWidth(80);
+                    needRefresh |= Combo("Display", (int*)&g_map.territoryBackground, "None\0Index\0Biome\0\0");
+                    PopItemWidth();
 
                     needRefresh |= Checkbox(getFixedSizeString("Borders", textLen).c_str(), &g_map.showTerritoriesBorders);
 
-                    //PushItemWidth(120);
-                    //needRefresh |= SliderFloat(getFixedSizeString("Opacity", textLen).c_str(), &g_map.bitmaps[Territories].alpha, 0.0f, 1.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
-                    //PopItemWidth();
-
-                    g_map.bitmaps[Territories].visible = g_map.showLandTerritories || g_map.showOceanTerritories;
+                    g_map.bitmaps[Territories].visible = g_map.territoryBackground != TerritoryBackground::None;
 
                     TreePop();
                 }
@@ -357,7 +353,7 @@ int main()
             ImGui::End();
         }
 
-        static bool demo = false;
+        static bool demo = true;
         if (demo)
             ImGui::ShowDemoWindow(&demo);
 
@@ -384,7 +380,7 @@ int main()
         const float panSpeed = 1.0f;
         const float zoomSpeed = 1.1f;
 
-        if (Mouse::isButtonPressed(Mouse::Right))
+        if (Mouse::isButtonPressed(Mouse::Left))
         {
             if (!g_cameraPan)
             {
@@ -395,7 +391,7 @@ int main()
             else
             {
                 //continue pan
-                g_cameraOffset = (g_cameraPanOrigin - (Vector2f)Mouse::getPosition(window)) * panSpeed / g_cameraZoom + g_cameraPreviousOffset;
+                g_cameraOffset = (g_cameraPanOrigin - (Vector2f)Mouse::getPosition(window)) * panSpeed * (g_cameraZoom*g_cameraZoom) + g_cameraPreviousOffset;
             }
         }
         else if (g_cameraPan)
@@ -431,25 +427,51 @@ int main()
             auto & bitmap = g_map.bitmaps[i];
             if (bitmap.visible)
             {
-                auto & texture = bitmap.texture;
-                texture.setRepeated(false);
-
-                auto & sprite = bitmap.sprite;
-
-                sf::Shader * shader = ShaderManager::get(bitmap.shader);
-
-                RenderStates rs;
-                             rs.shader = shader;
-                             rs.blendMode = bitmap.blend;
-
-                if (shader)
+                if (bitmap.drawQuad)
                 {
-                    shader->setUniform("texSize", (Vector2f)texture.getSize());
-                    shader->setUniform("screenSize", Vector2f(screenWidth, screenHeight));
-                    shader->setUniform("borders", g_map.showTerritoriesBorders);
+                    auto & texture = bitmap.texture;
+                    texture.setRepeated(false);
+                    
+                    auto & sprite = bitmap.sprite;
+                    
+                    sf::Shader * shader = ShaderManager::get(bitmap.quadshader);
+                    
+                    RenderStates rs;
+                    rs.shader = shader;
+                    rs.blendMode = bitmap.quadblend;
+                    
+                    if (shader)
+                    {
+                        shader->setUniform("texSize", (Vector2f)texture.getSize());
+                        shader->setUniform("screenSize", Vector2f(float(screenWidth), float(screenHeight)));
+                        shader->setUniform("borders", g_map.showTerritoriesBorders);
+                    }
+                    
+                    window.draw(sprite, rs);
                 }
 
-                window.draw(sprite, rs);
+                if (bitmap.drawSprites)
+                {
+                    sf::Shader * shader = ShaderManager::get(bitmap.spriteshader);
+
+                    RenderStates rs;
+                    rs.shader = shader;
+                    rs.blendMode = bitmap.spriteblend;
+
+                    for (u32 j = 0; j < bitmap.sprites.size(); ++j)
+                    {
+                        Sprite & sprite = bitmap.sprites[j];
+
+                        if (shader)
+                        {
+                            shader->setUniform("texSize", (Vector2f)sprite.getTexture()->getSize());
+                            shader->setUniform("screenSize", Vector2f(float(screenWidth), float(screenHeight)));
+                            shader->setUniform("color", Glsl::Vec4(sprite.getColor()));
+                        }
+
+                        window.draw(sprite, rs);
+                    }
+                }
             }
         }
 

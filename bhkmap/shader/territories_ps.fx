@@ -4,6 +4,7 @@ uniform float2 screenSize;
 uniform uint flags;
 uniform bool borders;
 
+#define TERRITORIES_FLAGS_BIOME   0x20
 #define TERRITORIES_FLAGS_WATER   0x40
 #define TERRITORIES_FLAGS_VISIBLE 0x80
 
@@ -30,7 +31,7 @@ void main()
     float territoryOpacity = 0.5f;
     float edgeOpacity = 0.75f;
 
-    float3 colors[6] =
+    float3 territoryColor[6] =
     {
         float3(1,0,0),
         float3(0,1,0),
@@ -40,12 +41,32 @@ void main()
         float3(1,1,1)
     };
 
+    float3 biomeColors[10] =
+    {
+        float3(0.8,0.8,0.9),
+        float3(0.6,0.6,0.4),
+        float3(1.0,1.0,0.7),
+        float3(0.6,0.8,0.3),
+        float3(0.8,0.7,0.4),
+        float3(1.0,1.0,0.3),
+        float3(0.6,1.0,1.0),
+        float3(0.5,0.5,0.4),
+        float3(0.7,0.8,0.4),
+        float3(0.6,0.7,0.6)
+    };
+
     int index = int(center.a * 255.0f);
-
-    float3 color = colors[index % 6];
-    float3 edgeColor = float3(1, 1, 1);
-
     uint flags = int(center.b * 255.0f);
+
+    float3 color = float3(0,0,0);
+
+    if (TERRITORIES_FLAGS_BIOME & flags)
+        color = biomeColors[index % 10];
+    else
+        color = territoryColor[index % 6];
+       
+    float3 edgeColor = float3(1, 1, 1);
+    
     bool visible = 0 != (flags & TERRITORIES_FLAGS_VISIBLE);
     bool water = 0 != (flags & TERRITORIES_FLAGS_WATER);
 

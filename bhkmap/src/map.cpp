@@ -9,6 +9,7 @@
 #define STBI_ONLY_PNG
 #include "stb_image.h"
 
+#define TERRITORIES_FLAGS_BIOME   0x20
 #define TERRITORIES_FLAGS_WATER   0x40
 #define TERRITORIES_FLAGS_VISIBLE 0x80
 
@@ -34,8 +35,27 @@ void Map::refresh()
     if (!loaded)
         return;
 
+    // load resource textures if needed
+    for (u32 i = 0; i < (u32)StrategicResource::Count; ++i)
+    {
+        Texture & tex = strategicResourceTextures[i];
+        if (Vector2u(0, 0) == tex.getSize())
+            tex.loadFromFile("data/img/" + strategicResources[i].name + ".png");
+    }
+
+    for (u32 i = 0; i < (u32)LuxuryResource::Count; ++i)
+    {
+        Texture & tex = luxuryResourceTextures[i];
+        if (Vector2u(0, 0) == tex.getSize())
+            tex.loadFromFile("data/img/" + luxuryResources[i].name + ".png");
+    }
+
     for (u32 i = 0; i < MapBitmap::Count; ++i)
-        bitmaps[i].image.create(width, height);
+    {
+        auto & bitmap = bitmaps[i];
+        bitmap.image.create(width, height);
+        bitmap.sprites.clear();
+    }
 
     Bitmap & heigthfield = bitmaps[Heightfield];
     Bitmap & territories = bitmaps[Territories];
@@ -49,6 +69,11 @@ void Map::refresh()
         Color::Magenta,
         Color::Cyan
     };
+
+    extern u32 screenWidth;
+    extern u32 screenHeight;
+
+    const Vector2f scale = Vector2f(float(screenWidth) / float(width), float(screenHeight) / float(height));
 
     for (u32 h = 0; h < height; ++h)
     {
@@ -67,24 +92,31 @@ void Map::refresh()
 
             u32 flags = 0;
 
-            if (territory.ocean)
+            switch (territoryBackground)
             {
-                if (showOceanTerritories)
-                {
-                    territoryColor.a = territoryIndex;
-                    flags = TERRITORIES_FLAGS_VISIBLE;
-                }            
+                case TerritoryBackground::None:
+                    break;
 
-                flags |= TERRITORIES_FLAGS_WATER;
-            }
-            else
-            {
-                if (showLandTerritories)
+                case TerritoryBackground::Territory:
                 {
                     territoryColor.a = territoryIndex;
-                    flags = TERRITORIES_FLAGS_VISIBLE;
+
+                    if (territory.ocean)
+                        flags |= TERRITORIES_FLAGS_WATER;
+ 
+                    flags |= TERRITORIES_FLAGS_VISIBLE;
                 }
-            }
+                break;
+
+                case TerritoryBackground::Biome:
+                {
+                    u32 biomeIndex = territory.biome;
+                    territoryColor.a = biomeIndex;
+
+                    flags |= TERRITORIES_FLAGS_VISIBLE | TERRITORIES_FLAGS_BIOME;
+                }
+                break;
+            }         
 
             territoryColor.b = flags;
             
@@ -100,8 +132,21 @@ void Map::refresh()
             {
                 if (resourceIndex >= (u32)LuxuryResource::First && resourceIndex <= (u32)LuxuryResource::Last)
                 {
-                    if (luxuryResources[resourceIndex - (u32)LuxuryResource::First].visible)
-                        resColor = ColorFloat4ToUbyte4(luxuryResources[resourceIndex - (u32)LuxuryResource::First].color);
+                    const u32 luxuryIndex = resourceIndex - (u32)LuxuryResource::First;
+
+                    if (luxuryResources[luxuryIndex].visible)
+                    {
+                        resColor = ColorFloat4ToUbyte4(luxuryResources[luxuryIndex].color);
+
+                        Texture & tex = luxuryResourceTextures[luxuryIndex];
+                        tex.setSmooth(false);
+                        Sprite resSprite;
+                        resSprite.setTexture(tex);
+                        resSprite.setColor(resColor);
+                        resSprite.setOrigin(Vector2f(tex.getSize().x*0.5f, tex.getSize().y*0.5f));
+                        resSprite.setPosition(Vector2f((float(w) + 0.5f)*scale.x, (float(h) + 0.5f)*scale.y));
+                        resources.sprites.push_back(resSprite);
+                    }
                 }
             }
 
@@ -109,19 +154,30 @@ void Map::refresh()
             {
                 if (resourceIndex >= (u32)StrategicResource::First && resourceIndex <= (u32)StrategicResource::Last)
                 {
-                    if (strategicResources[resourceIndex - (u32)StrategicResource::First].visible)
-                        resColor = ColorFloat4ToUbyte4(strategicResources[resourceIndex - (u32)StrategicResource::First].color);
+                    const u32 strategicIndex = resourceIndex - (u32)StrategicResource::First;
+
+                    if (strategicResources[strategicIndex].visible)
+                    {
+                        resColor = ColorFloat4ToUbyte4(strategicResources[strategicIndex].color);
+
+                        Texture & tex = strategicResourceTextures[strategicIndex];
+                        tex.setSmooth(false);
+                        Sprite resSprite;
+                        resSprite.setTexture(tex);
+                        resSprite.setColor(resColor);
+                        resSprite.setOrigin(Vector2f(tex.getSize().x*0.5f, tex.getSize().y*0.5f));
+                        resSprite.setPosition(Vector2f((float(w) + 0.5f)*scale.x, (float(h) + 0.5f)*scale.y));
+                        resources.sprites.push_back(resSprite);
+                    }
                 }
             }
 
-            resources.image.setPixel(w, h, resColor);
+            resources.image.setPixel(w, h, Color(0, 0, 0, 128));
+            resources.drawQuad = true;
+            resources.drawSprites = true;
         }
     }
 
-    extern u32 screenWidth;
-    extern u32 screenHeight;
-
-    const Vector2f scale = Vector2f(float(screenWidth) / float(width), float(screenHeight) / float(height));
     for (u32 i = 0; i < MapBitmap::Count; ++i)
     {
         auto & bitmap = bitmaps[i];
@@ -130,7 +186,7 @@ void Map::refresh()
         bitmap.sprite.setTextureRect(IntRect(0, 0, bitmap.texture.getSize().x, bitmap.texture.getSize().y));
         bitmap.sprite.setScale(scale);
 
-        if (bitmap.shader == invalidShaderID)
+        if (bitmap.quadshader == invalidShaderID)
         {
             switch ((MapBitmap)i)
             {
@@ -138,12 +194,26 @@ void Map::refresh()
                     break;
 
                 case MapBitmap::Territories:
-                    bitmap.shader = ShaderManager::add("bhkmap/shader/territories_vs.fx", "bhkmap/shader/territories_ps.fx");
-                    bitmap.blend = sf::BlendMode(BlendMode::Factor::SrcAlpha, sf::BlendMode::Factor::OneMinusSrcAlpha, BlendMode::Equation::Add);
+                    bitmap.quadshader = ShaderManager::add("bhkmap/shader/territories_vs.fx", "bhkmap/shader/territories_ps.fx");
+                    bitmap.quadblend = sf::BlendMode(BlendMode::Factor::SrcAlpha, sf::BlendMode::Factor::OneMinusSrcAlpha, BlendMode::Equation::Add);
                 break;
 
                 case MapBitmap::Resources:
-                    bitmap.blend = sf::BlendMode(BlendMode::Factor::SrcAlpha, sf::BlendMode::Factor::OneMinusSrcAlpha, BlendMode::Equation::Add);
+                    bitmap.quadblend = sf::BlendMode(BlendMode::Factor::SrcAlpha, sf::BlendMode::Factor::OneMinusSrcAlpha, BlendMode::Equation::Add);
+                    break;
+            }
+        }
+
+        if (bitmap.spriteshader == invalidShaderID)
+        {
+            switch ((MapBitmap)i)
+            {
+                default:
+                    break;
+
+                case MapBitmap::Resources:
+                    bitmap.spriteshader = ShaderManager::add("bhkmap/shader/resources_vs.fx", "bhkmap/shader/resources_ps.fx");
+                    bitmap.spriteblend = sf::BlendMode(BlendMode::Factor::SrcAlpha, sf::BlendMode::Factor::OneMinusSrcAlpha, BlendMode::Equation::Add);
                     break;
             }
         }
