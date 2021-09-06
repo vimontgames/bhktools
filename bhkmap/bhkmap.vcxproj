@@ -155,6 +155,14 @@
       <FileType>Document</FileType>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\data\shader\heightfield_ps.fx">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="..\data\shader\heightfield_vs.fx">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -111,6 +111,7 @@ struct Map
     
     TerritoryBackground territoryBackground = TerritoryBackground::Territory;
     bool showTerritoriesBorders = true;
+    bool useHexUVs = true;
 
     bool showStrategicResources = false;
     bool showLuxuryResources = false;

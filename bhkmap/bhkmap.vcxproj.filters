@@ -158,5 +158,11 @@
     <FxCompile Include="..\data\shader\territories_vs.fx">
       <Filter>data\shader</Filter>
     </FxCompile>
+    <FxCompile Include="..\data\shader\heightfield_ps.fx">
+      <Filter>data\shader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\data\shader\heightfield_vs.fx">
+      <Filter>data\shader</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

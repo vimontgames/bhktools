@@ -1,8 +1,3 @@
-uniform sampler2D texture;
-uniform float2 texSize;
-uniform float2 screenSize;
-uniform float4 color;
-
 void main()
 {
     float2 invTexSize = 1.0f / texSize;

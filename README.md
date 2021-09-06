@@ -14,6 +14,12 @@ SFML=G:\SFML\SFML-2.5.1
 
 # Changelog
 
+v0.24
+-----
+* Replicate hexes distortion on textures and icons
+
+![ScreenShot024](doc/img/screen024.png?raw=true "Screenshot024")
+
 v0.23
 -----
 * Refactor menus

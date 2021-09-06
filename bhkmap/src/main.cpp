@@ -22,7 +22,7 @@ u32 g_screenHeight = 1024;
 static ImGuiFileBrowser g_fileDialog;
 static string g_myDocumentsPath;
 static string g_currentWorkingDirectory;
-static float g_comboxItemWidth = 128;
+static float g_comboxItemWidth = 120;
 static const u32 g_fixedTextLength = 10;
 
 bool g_openFileDialog = false;
@@ -100,7 +100,7 @@ int main()
     if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_MYDOCUMENTS, NULL, CSIDL_MYDOCUMENTS, userFolder)))
         g_myDocumentsPath = ws2s(wstring(userFolder)) + "\\Humankind\\Maps";
 
-    RenderWindow window(VideoMode(g_screenWidth, g_screenHeight), "bhkmap 0.23", Style::Titlebar | Style::Resize | Style::Close);
+    RenderWindow window(VideoMode(g_screenWidth, g_screenHeight), "bhkmap 0.24", Style::Titlebar | Style::Resize | Style::Close);
     window.setFramerateLimit(60);
     Init(window);
 
@@ -425,6 +425,10 @@ int main()
 
                     needRefresh |= Checkbox(getFixedSizeString("Borders", g_fixedTextLength).c_str(), &g_map.showTerritoriesBorders);
 
+                    ImGui::SameLine();
+                    needRefresh |= Checkbox(getFixedSizeString("Hexes", g_fixedTextLength).c_str(), &g_map.useHexUVs); 
+
+
                     g_map.bitmaps[Territories].visible = g_map.territoryBackground != TerritoryBackground::None;
 
                     TreePop();
@@ -614,7 +618,7 @@ int main()
                 if (bitmap.drawQuad)
                 {
                     auto & texture = bitmap.texture;
-                    texture.setRepeated(false);
+                    texture.setRepeated(true);
                     
                     auto & sprite = bitmap.sprite;
                     
@@ -653,6 +657,9 @@ int main()
                                 passFlags = PASS_FLAG_WONDER;
                             break;
                         }
+
+                        if (g_map.useHexUVs)
+                            passFlags |= PASS_FLAG_HEXES;
 
                         if (g_map.showTerritoriesBorders)
                             passFlags |= PASS_FLAG_BORDERS;

@@ -1,24 +1,20 @@
-uniform sampler2D texture;
-uniform float2 texSize;
-uniform float2 screenSize;
-
 void main()
 {
     float2 invScreenSize = 1.0f / screenSize * 1.5f;
 
     float2 uv = gl_TexCoord[0].xy;
 
-    float4 center   = texture2D(texture, uv);
+    float4 center   = texture2D(texture, hexUV(uv));
 
-    float4 left     = texture2D(texture, uv + float2(-invScreenSize.x, 0));
-    float4 right    = texture2D(texture, uv + float2(+invScreenSize.x, 0));
-    float4 bottom   = texture2D(texture, uv + float2(0, -invScreenSize.y));
-    float4 up       = texture2D(texture, uv + float2(0, +invScreenSize.y));
+    float4 left     = texture2D(texture, hexUV(uv + float2(-invScreenSize.x, 0)));
+    float4 right    = texture2D(texture, hexUV(uv + float2(+invScreenSize.x, 0)));
+    float4 bottom   = texture2D(texture, hexUV(uv + float2(0, -invScreenSize.y)));
+    float4 up       = texture2D(texture, hexUV(uv + float2(0, +invScreenSize.y)));
 
-    float4 topLeft     = texture2D(texture, uv + float2(-invScreenSize.x, +invScreenSize.y));
-    float4 topRight    = texture2D(texture, uv + float2(+invScreenSize.x, +invScreenSize.y));
-    float4 bottomLeft  = texture2D(texture, uv + float2(-invScreenSize.x, -invScreenSize.y));
-    float4 bottomRight = texture2D(texture, uv + float2(+invScreenSize.x, -invScreenSize.y));
+    float4 topLeft     = texture2D(texture, hexUV(uv + float2(-invScreenSize.x, +invScreenSize.y)));
+    float4 topRight    = texture2D(texture, hexUV(uv + float2(+invScreenSize.x, +invScreenSize.y)));
+    float4 bottomLeft  = texture2D(texture, hexUV(uv + float2(-invScreenSize.x, -invScreenSize.y)));
+    float4 bottomRight = texture2D(texture, hexUV(uv + float2(+invScreenSize.x, -invScreenSize.y)));
 
     bool edge = (0 != (PASS_FLAG_BORDERS & passFlags)) && ((left.a != center.a) || (right.a != center.a) || (bottom.a != center.a) || (up.a != center.a) || (topLeft.a != center.a) || (topRight.a != center.a) || (bottomLeft.a != center.a) || (bottomRight.a != center.a));
    

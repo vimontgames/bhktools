@@ -169,6 +169,12 @@ void Map::refresh()
             const u32 resourceIndex = poiData & 0xFF;
             const u32 wonderIndex = naturalwonders[offset] & 0xFF;
 
+            float cellWidth = float(width) / scale.x;
+            Vector2f spriteOffset = Vector2f(0.0f,0.0f);
+
+            if (useHexUVs)
+                spriteOffset.x = (h & 1) ? -0.25f * cellWidth : +0.25f * cellWidth;
+
             if (showLuxuryResources)
             {
                 if (resourceIndex >= (u32)LuxuryResource::First && resourceIndex <= (u32)LuxuryResource::Last)
@@ -186,6 +192,7 @@ void Map::refresh()
                         resSprite.setColor(resColor);
                         resSprite.setOrigin(Vector2f(tex.getSize().x*0.5f, tex.getSize().y*0.5f));
                         resSprite.setPosition(Vector2f((float(w) + 0.5f)*scale.x, (float(h) + 0.5f)*scale.y));
+                        resSprite.move(spriteOffset);
                         resources.sprites.push_back(resSprite);
                     }
                 }
@@ -208,6 +215,7 @@ void Map::refresh()
                         resSprite.setColor(resColor);
                         resSprite.setOrigin(Vector2f(tex.getSize().x*0.5f, tex.getSize().y*0.5f));
                         resSprite.setPosition(Vector2f((float(w) + 0.5f)*scale.x, (float(h) + 0.5f)*scale.y));
+                        resSprite.move(spriteOffset);
                         resources.sprites.push_back(resSprite);
                     }
                 }
@@ -226,6 +234,7 @@ void Map::refresh()
                     resSprite.setColor(resColor);
                     resSprite.setOrigin(Vector2f(tex.getSize().x*0.5f, tex.getSize().y*0.5f));
                     resSprite.setPosition(Vector2f((float(w) + 0.5f)*scale.x, (float(h) + 0.5f)*scale.y));
+                    resSprite.move(spriteOffset);
                     resources.sprites.push_back(resSprite);
                 }
             }
@@ -267,6 +276,11 @@ void Map::refresh()
             switch ((MapBitmap)i)
             {
                 default:
+                    break;
+
+                case MapBitmap::Heightfield:
+                    bitmap.quadshader = ShaderManager::add("data/shader/heightfield_vs.fx", "data/shader/heightfield_ps.fx");
+                    bitmap.quadblend = sf::BlendMode(BlendMode::Factor::One, sf::BlendMode::Factor::Zero, BlendMode::Equation::Add);
                     break;
 
                 case MapBitmap::Resources:
