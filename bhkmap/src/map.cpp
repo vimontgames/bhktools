@@ -52,6 +52,9 @@ void Map::refresh()
             tex.loadFromFile("data/img/" + luxuryResources[i].name + ".png");
     }
 
+    if (Vector2u(0,0) == wonderTexture.getSize())
+        wonderTexture.loadFromFile("data/img/wonder.png");
+
     for (u32 i = 0; i < MapBitmap::Count; ++i)
     {
         auto & bitmap = bitmaps[i];
@@ -72,10 +75,10 @@ void Map::refresh()
         Color::Cyan
     };
 
-    extern u32 screenWidth;
-    extern u32 screenHeight;
+    extern u32 g_screenWidth;
+    extern u32 g_screenHeight;
 
-    const Vector2f scale = Vector2f(float(screenWidth) / float(width), float(screenHeight) / float(height));
+    const Vector2f scale = Vector2f(float(g_screenWidth) / float(width), float(g_screenHeight) / float(height));
 
     for (u32 h = 0; h < height; ++h)
     {
@@ -141,7 +144,7 @@ void Map::refresh()
                 }
                 break;
 
-                case TerritoryBackground::NaturalWonders:
+                case TerritoryBackground::Wonders:
                 {
                     if (0xFF != (naturalWonderIndex & 0xFF))
                     {
@@ -164,6 +167,7 @@ void Map::refresh()
             Color resColor = Color(0, 0, 0, 0);
 
             const u32 resourceIndex = poiData & 0xFF;
+            const u32 wonderIndex = naturalwonders[offset] & 0xFF;
 
             if (showLuxuryResources)
             {
@@ -206,6 +210,23 @@ void Map::refresh()
                         resSprite.setPosition(Vector2f((float(w) + 0.5f)*scale.x, (float(h) + 0.5f)*scale.y));
                         resources.sprites.push_back(resSprite);
                     }
+                }
+            }
+
+            if (showWonders)
+            {
+                if (0xFF != wonderIndex)
+                {
+                    resColor = ColorFloat4ToUbyte4(naturalWondersInfo[wonderIndex].color);
+                
+                    Texture & tex = wonderTexture;
+                    tex.setSmooth(false);
+                    Sprite resSprite;
+                    resSprite.setTexture(tex);
+                    resSprite.setColor(resColor);
+                    resSprite.setOrigin(Vector2f(tex.getSize().x*0.5f, tex.getSize().y*0.5f));
+                    resSprite.setPosition(Vector2f((float(w) + 0.5f)*scale.x, (float(h) + 0.5f)*scale.y));
+                    resources.sprites.push_back(resSprite);
                 }
             }
 
@@ -345,18 +366,45 @@ void Map::loadHMap(const string & _map, const string & _cwd)
         u32 naturalWonderNameCount = 0;
         xmlErr = xmlNaturalWonderNames->QueryUnsignedAttribute("Length", &naturalWonderNameCount);
 
-        naturalWonderNames.clear();
-        naturalWonderNames.reserve(naturalWonderNameCount);
+        naturalWondersInfo.clear();
+        naturalWondersInfo.reserve(naturalWonderNameCount);
 
         XMLNode * xmlWonderNameNode = xmlNaturalWonderNames->FirstChildElement("String");
+
+        int i = 0;
+
+        ColorFloat4 wonderColors[] = 
+        {
+            {1.00f, 1.00f, 0.50f, 1.00f},
+            {0.00f, 1.00f, 1.00f, 1.00f},
+            {0.00f, 0.00f, 1.00f, 1.00f},
+            {0.00f, 0.60f, 1.00f, 1.00f},
+            {0.00f, 0.80f, 1.00f, 1.00f},
+            {0.00f, 0.40f, 1.00f, 1.00f},
+            {0.00f, 0.20f, 1.00f, 1.00f},
+            {0.90f, 0.90f, 0.90f, 1.00f},
+            {0.80f, 0.80f, 0.80f, 1.00f},
+            {0.70f, 0.70f, 0.70f, 1.00f},
+            {0.70f, 0.00f, 0.00f, 1.00f},
+            {0.75f, 0.75f, 1.00f, 1.00f},
+            {0.90f, 1.00f, 0.60f, 1.00f},
+            {1.00f, 1.00f, 0.00f, 1.00f},
+        };
 
         while (xmlWonderNameNode)
         {
             string name = xmlWonderNameNode->FirstChild()->ToText()->Value();
             
-            naturalWonderNames.push_back(name);
+            NaturalWonder wonder;
+
+            wonder.name = name;
+
+            wonder.color = wonderColors[i % _countof(wonderColors)];
+
+            naturalWondersInfo.push_back(wonder);
 
             xmlWonderNameNode = xmlWonderNameNode->NextSiblingElement("String");
+            ++i;
         }
     }
 

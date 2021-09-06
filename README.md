@@ -14,13 +14,20 @@ SFML=G:\SFML\SFML-2.5.1
 
 # Changelog
 
+v0.23
+-----
+* Refactor menus
+* Display natural wonders as ressources with custom colors 
+
+![ScreenShot023](doc/img/screen023.png?raw=true "Screenshot023")
+
 v0.22
 -----
 * Refactor shaders (per-texel vs. global flags)
 * Refactor map save
 * Display natural wonders
 
-![ScreenShot0212](doc/img/screen022.png?raw=true "Screenshot022")
+![ScreenShot022](doc/img/screen022.png?raw=true "Screenshot022")
 
 v0.21
 -----

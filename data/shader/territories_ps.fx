@@ -85,6 +85,10 @@ void main()
         case PASS_FLAG_BIOME:
             color = biomeColors[biomeIndex % 10];
             break;
+
+        case PASS_FLAG_WONDER:
+            color = 1;
+            break;
     }     
        
     float3 edgeColor = float3(1, 1, 1);
@@ -100,6 +104,6 @@ void main()
 
     gl_FragColor.rgba = edge ? float4(edgeColor, edgeOpacity) : float4(color, territoryOpacity);
 
-    if (!visible)
+    if (!visible && !edge)
         gl_FragColor.a = 0; 
 }

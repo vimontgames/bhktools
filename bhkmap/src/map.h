@@ -61,11 +61,19 @@ enum class TerritoryBackground : u32
     Territory,
     Biome,
     Landmarks,
-    NaturalWonders,
+    Wonders,
 
     First = None,
-    Last = NaturalWonders,
+    Last = Wonders,
     Count = Last - First + 1
+};
+
+//--------------------------------------------------------------------------------------
+struct NaturalWonder
+{
+    std::string name;
+    ColorFloat4 color = ColorFloat4(1,0,0,1);
+    bool visible = true;
 };
 
 //--------------------------------------------------------------------------------------
@@ -95,7 +103,7 @@ struct Map
 
     std::vector<Territory> territoriesInfo;
     std::vector<Landmark> landmarkInfo;
-    std::vector<std::string> naturalWonderNames;
+    std::vector<NaturalWonder> naturalWondersInfo;
 
     Bitmap bitmaps[MapBitmap::Count];
 
@@ -106,9 +114,11 @@ struct Map
 
     bool showStrategicResources = false;
     bool showLuxuryResources = false;
+    bool showWonders = false;
 
     sf::Texture strategicResourceTextures[(u32)StrategicResource::Count];
     sf::Texture luxuryResourceTextures[(u32)LuxuryResource::Count];
+    sf::Texture wonderTexture;
 
     tinyxml2::XMLDocument xmlDocDescriptor;
     tinyxml2::XMLDocument xmlDocSave;

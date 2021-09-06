@@ -7,7 +7,7 @@ using namespace std;
 //--------------------------------------------------------------------------------------
 string getFixedSizeString(const string & _string, u32 _size)
 {
-    const auto spaces = _size - _string.length();
+    const auto spaces = max(0,(int)_size - (int)_string.length());
     string result = _string;
     result.append(spaces, ' ');
     return result;

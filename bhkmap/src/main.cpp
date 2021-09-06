@@ -16,12 +16,14 @@ using namespace ImGui::SFML;
 using namespace imgui_addons;
 
 bool g_hasFocus = true;
-u32 screenWidth = 1280;
-u32 screenHeight = 720;
+u32 g_screenWidth = 1920;
+u32 g_screenHeight = 1024;
 
 static ImGuiFileBrowser g_fileDialog;
 static string g_myDocumentsPath;
 static string g_currentWorkingDirectory;
+static float g_comboxItemWidth = 128;
+static const u32 g_fixedTextLength = 10;
 
 bool g_openFileDialog = false;
 bool g_saveFileDialog = false;
@@ -31,6 +33,7 @@ bool g_openDisplayWindow = true;
 bool g_openInfoWindow = true;
 bool g_openTerritoriesWindow = true;
 bool g_openLandmarksWindow = true;
+bool g_openWondersWindow = true;
 bool g_openDebugWindow = true;
 
 bool g_openHelpWindow = true;
@@ -97,7 +100,7 @@ int main()
     if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_MYDOCUMENTS, NULL, CSIDL_MYDOCUMENTS, userFolder)))
         g_myDocumentsPath = ws2s(wstring(userFolder)) + "\\Humankind\\Maps";
 
-    RenderWindow window(VideoMode(screenWidth, screenHeight), "bhkmap 0.22");
+    RenderWindow window(VideoMode(g_screenWidth, g_screenHeight), "bhkmap 0.23", Style::Titlebar | Style::Resize | Style::Close);
     window.setFramerateLimit(60);
     Init(window);
 
@@ -119,17 +122,37 @@ int main()
         {
             ProcessEvent(event);
 
-            if (event.type == Event::Closed)
-                window.close();
-            else if (event.type == sf::Event::GainedFocus)
-                g_hasFocus = true;
-            else if (event.type == sf::Event::LostFocus)
-                g_hasFocus = false;
-
-            if (event.type == sf::Event::MouseWheelMoved)
+            switch (event.type)
             {
-                if (!IsWindowHovered(ImGuiHoveredFlags_AnyWindow) && !IsWindowFocused(ImGuiHoveredFlags_AnyWindow) && g_hasFocus)
-                    g_mouseWheelDelta = (float)event.mouseWheel.delta;
+                case Event::Closed:
+                    window.close();
+                    break;
+
+                case Event::GainedFocus:
+                    g_hasFocus = true;
+                    break;
+
+                case Event::LostFocus:
+                    g_hasFocus = false;
+                    break;
+
+                case Event::MouseWheelMoved:
+                    if (!IsWindowHovered(ImGuiHoveredFlags_AnyWindow) && !IsWindowFocused(ImGuiHoveredFlags_AnyWindow) && g_hasFocus)
+                        g_mouseWheelDelta = (float)event.mouseWheel.delta;
+                    break;
+
+                case Event::Resized:
+                {
+                    Vector2f offset = Vector2f(float(g_screenWidth / 2) - float(event.size.width / 2), float(g_screenHeight / 2) - float(event.size.height / 2));
+                    g_cameraOffset += offset;
+                    g_cameraPreviousOffset += offset;
+
+                    g_cameraZoom = g_cameraZoom / (float(event.size.height) / float(g_screenHeight));
+
+                    g_screenWidth = event.size.width;
+                    g_screenHeight = event.size.height;
+                }
+                break;
             }
         }
 
@@ -169,37 +192,40 @@ int main()
                 ImGui::EndMenu();
             }
 
-            if (ImGui::BeginMenu("Tools"))
+            if (ImGui::BeginMenu("Windows"))
             {
-                if (ImGui::MenuItem("Display"))
-                    g_openDisplayWindow = true;
+                if (ImGui::MenuItem("Display", nullptr, g_openDisplayWindow))
+                    g_openDisplayWindow ^= 1;
 
-                if (ImGui::MenuItem("Info"))
-                    g_openInfoWindow = true;
+                if (ImGui::MenuItem("Info",nullptr, g_openInfoWindow))
+                    g_openInfoWindow ^= 1;
 
-                if (ImGui::MenuItem("Landmarks"))
-                    g_openLandmarksWindow = true;
+                if (ImGui::MenuItem("Landmarks", nullptr, g_openLandmarksWindow))
+                    g_openLandmarksWindow ^= 1;
 
-                if (ImGui::MenuItem("Territories"))
-                    g_openTerritoriesWindow = true;
+                if (ImGui::MenuItem("Territories", nullptr, g_openTerritoriesWindow))
+                    g_openTerritoriesWindow ^= 1;
+
+                //if (ImGui::MenuItem("Wonders", nullptr, g_openWondersWindow))
+                //    g_openWondersWindow ^= 1;
 
                 ImGui::Separator();
 
-                if (ImGui::MenuItem("Debug"))
-                    g_openDebugWindow = true;
+                if (ImGui::MenuItem("Help", nullptr, g_openHelpWindow))
+                    g_openHelpWindow ^= 1;
+
+                if (ImGui::MenuItem("Debug", nullptr, g_openDebugWindow))
+                    g_openDebugWindow ^= 1;
 
                 ImGui::EndMenu();
             }
 
-            if (ImGui::BeginMenu("Help"))
+            if (ImGui::BeginMenu("About"))
             {
-                if (ImGui::MenuItem("View Help"))
-                    g_openHelpWindow = true;
-
                 ImGui::Separator();
 
-                if (ImGui::MenuItem("About bhkmap"))
-                    g_openAboutWindow = true;
+                if (ImGui::MenuItem("bhkmap", nullptr, g_openAboutWindow))
+                    g_openAboutWindow ^= 1;
 
                 ImGui::EndMenu();
             }
@@ -328,7 +354,7 @@ int main()
                 {
                     if (TreeNodeEx(to_string(i).c_str(), ImGuiTreeNodeFlags_DefaultOpen))
                     {
-                        PushItemWidth(132);
+                        PushItemWidth(g_comboxItemWidth);
 
                         auto & territory = g_map.territoriesInfo[i];
                         
@@ -355,7 +381,7 @@ int main()
                 {
                     if (TreeNodeEx(to_string(i).c_str(), ImGuiTreeNodeFlags_DefaultOpen))
                     {
-                        PushItemWidth(132);
+                        PushItemWidth(g_comboxItemWidth);
 
                         auto & landmark = g_map.landmarkInfo[i];
 
@@ -378,19 +404,26 @@ int main()
             ImGui::End();
         }
 
+        //if (g_openWondersWindow)
+        //{
+        //    if (Begin("Wonders", &g_openWondersWindow))
+        //    {
+        //
+        //    }
+        //    ImGui::End();
+        //}
+
         if (g_openDisplayWindow)
         {
             if (Begin("Display", &g_openDisplayWindow))
             {
-                const u32 textLen = 10;
-
                 if (TreeNodeEx("Map", ImGuiTreeNodeFlags_DefaultOpen))
                 {
-                    PushItemWidth(132);
-                    needRefresh |= Combo("Filter", (int*)&g_map.territoryBackground, "None\0Territories\0Biomes\0Landmarks\0Natural Wonders\0\0");
+                    PushItemWidth(g_comboxItemWidth);
+                    needRefresh |= Combo("Filter", (int*)&g_map.territoryBackground, "None\0Territories\0Biomes\0Landmarks\0Wonders\0\0");
                     PopItemWidth();
 
-                    needRefresh |= Checkbox(getFixedSizeString("Borders", textLen).c_str(), &g_map.showTerritoriesBorders);
+                    needRefresh |= Checkbox(getFixedSizeString("Borders", g_fixedTextLength).c_str(), &g_map.showTerritoriesBorders);
 
                     g_map.bitmaps[Territories].visible = g_map.territoryBackground != TerritoryBackground::None;
 
@@ -409,7 +442,7 @@ int main()
                             const u32 index = i - _first;
                             auto & info = _infos[index];
 
-                            changed |= ImGui::Checkbox(getFixedSizeString(info.name.c_str(), textLen).c_str(), &info.visible);
+                            changed |= ImGui::Checkbox(getFixedSizeString(info.name.c_str(), g_fixedTextLength).c_str(), &info.visible);
                             ImGui::SameLine();
                             float * pFloat = (float*)&info.color.rgba[0];
                             changed |= ImGui::ColorEdit4(info.name.c_str(), pFloat, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_Float | ImGuiColorEditFlags_NoLabel);
@@ -419,18 +452,36 @@ int main()
                         return changed;
                     };
 
-                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Strategic", textLen).c_str(), &g_map.showStrategicResources);
+                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Strategic", g_fixedTextLength).c_str(), &g_map.showStrategicResources);
                     if (g_map.showStrategicResources)
                         needRefresh |= ListResources(strategicResources, (u32)StrategicResource::First, (u32)StrategicResource::Last);
 
-                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Luxury", textLen).c_str(), &g_map.showLuxuryResources);
+                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Luxury", g_fixedTextLength).c_str(), &g_map.showLuxuryResources);
                     if (g_map.showLuxuryResources)
                         needRefresh |= ListResources(luxuryResources, (u32)LuxuryResource::First, (u32)LuxuryResource::Last);
 
-                    g_map.bitmaps[Resources].visible = g_map.showStrategicResources || g_map.showLuxuryResources;
+                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Wonders", g_fixedTextLength).c_str(), &g_map.showWonders);
+
+                    if (g_map.showWonders)
+                    {
+                        ImGui::Indent();
+                        for (u32 i = 0; i < g_map.naturalWondersInfo.size(); ++i)
+                        {
+                            auto & wonder = g_map.naturalWondersInfo[i];
+
+                            needRefresh |= ImGui::Checkbox(getFixedSizeString(wonder.name.c_str(), 20).c_str(), &wonder.visible);
+
+                            ImGui::SameLine();
+                            float * pFloat = (float*)&wonder.color.rgba[0];
+                            needRefresh |= ImGui::ColorEdit4(wonder.name.c_str(), pFloat, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_Float | ImGuiColorEditFlags_NoLabel);
+                        }
+                        ImGui::Unindent();
+                    }
+
+                    g_map.bitmaps[Resources].visible = g_map.showStrategicResources || g_map.showLuxuryResources || g_map.showWonders;
 
                     ImGui::TreePop();
-                };
+                }
             }
             ImGui::End();
         }
@@ -490,7 +541,7 @@ int main()
             SetCurrentDirectory(g_myDocumentsPath.c_str());
         }
 
-        if (g_fileDialog.showFileDialog("Open", ImGuiFileBrowser::DialogMode::OPEN, ImVec2(float(screenWidth)/2.0f, float(screenHeight)/2.0f), ".hmap"))
+        if (g_fileDialog.showFileDialog("Open", ImGuiFileBrowser::DialogMode::OPEN, ImVec2(float(g_screenWidth)/2.0f, float(g_screenHeight)/2.0f), ".hmap"))
         {
             SetCurrentDirectory(g_currentWorkingDirectory.c_str());
             const string newFilePath = g_fileDialog.selected_path;
@@ -498,7 +549,7 @@ int main()
             g_map.loadHMap(g_map.path, g_currentWorkingDirectory);
             resetCamera();
         }
-        else if (g_fileDialog.showFileDialog("Save", ImGuiFileBrowser::DialogMode::SAVE, ImVec2(float(screenWidth) / 2.0f, float(screenHeight) / 2.0f), ".hmap"))
+        else if (g_fileDialog.showFileDialog("Save", ImGuiFileBrowser::DialogMode::SAVE, ImVec2(float(g_screenWidth) / 2.0f, float(g_screenHeight) / 2.0f), ".hmap"))
         {
             SetCurrentDirectory(g_currentWorkingDirectory.c_str());
             const string newFilePath = g_fileDialog.selected_path;
@@ -547,8 +598,8 @@ int main()
         window.clear();
 
         sf::View view;
-        view.setCenter(sf::Vector2f(screenWidth*0.5f, screenHeight*0.5f));
-        view.setSize(sf::Vector2f((float)screenWidth, (float)screenHeight));
+        view.setCenter(sf::Vector2f(g_screenWidth*0.5f, g_screenHeight*0.5f));
+        view.setSize(sf::Vector2f((float)g_screenWidth, (float)g_screenHeight));
         view.zoom(g_cameraZoom); // zeng
 
         view.move(g_cameraOffset);
@@ -576,7 +627,7 @@ int main()
                     if (shader)
                     {
                         shader->setUniform("texSize", (Vector2f)texture.getSize());
-                        shader->setUniform("screenSize", Vector2f(float(screenWidth), float(screenHeight)));
+                        shader->setUniform("screenSize", Vector2f(float(g_screenWidth), float(g_screenHeight)));
 
                         int passFlags = 0;
 
@@ -598,8 +649,8 @@ int main()
                                 passFlags = PASS_FLAG_LANDMARK;
                             break;
 
-                            case TerritoryBackground::NaturalWonders:
-                                passFlags = PASS_FLAG_NATURALWONDER;
+                            case TerritoryBackground::Wonders:
+                                passFlags = PASS_FLAG_WONDER;
                             break;
                         }
 
@@ -627,8 +678,10 @@ int main()
                         if (shader)
                         {
                             shader->setUniform("texSize", (Vector2f)sprite.getTexture()->getSize());
-                            shader->setUniform("screenSize", Vector2f(float(screenWidth), float(screenHeight)));
-                            shader->setUniform("color", Glsl::Vec4(sprite.getColor()));
+                            shader->setUniform("screenSize", Vector2f(float(g_screenWidth), float(g_screenHeight)));
+
+                            auto color = Glsl::Vec4(sprite.getColor());
+                            shader->setUniform("color", color);
                         }
 
                         window.draw(sprite, rs);
