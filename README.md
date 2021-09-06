@@ -14,6 +14,15 @@ SFML=G:\SFML\SFML-2.5.1
 
 # Changelog
 
+v0.31
+-----
+* Display tile type
+* Resource counters
+* Hide unselected natural wonders
+* Fix crash with ImGui::TreePop when some controls were collapsed
+
+![ScreenShot031](doc/img/screen031.png?raw=true "Screenshot031")
+
 v0.3
 -----
 * Fix resource draw order

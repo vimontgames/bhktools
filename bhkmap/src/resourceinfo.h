@@ -5,9 +5,11 @@
 //--------------------------------------------------------------------------------------
 struct ResourceInfo
 {
-    ColorFloat4 color;
     std::string name;
-    bool visible;
+    ColorFloat4 color;
+    bool visible = true;
+    sf::Texture texture;
+    u32 count = 0;
 };
 
 //--------------------------------------------------------------------------------------
@@ -66,5 +68,34 @@ enum class LuxuryResource
     Count = Last - First + 1
 };
 
+//--------------------------------------------------------------------------------------
+// https://humankind.fandom.com/wiki/Natural_Wonder
+//--------------------------------------------------------------------------------------
+enum class NaturalWonderResource
+{
+    DanakilDesert = 0,
+    GreatBarrierReef,
+    GreatBlueHole,
+    HalongBay,
+    KawahIjen,
+    LakeBaikal,
+    LakeHillier,
+    MountEverest,
+    MountMulu,
+    MountRoraima,
+    MountVesuvius,
+    PeritorMorenoGlacier,
+    Vinicuna,
+    Yellowstone,
+
+    Invalid = 0xFF,
+
+    First = DanakilDesert,
+    Last = Yellowstone,
+
+    Count = Last - First + 1
+};
+
 extern ResourceInfo luxuryResources[];
 extern ResourceInfo strategicResources[];
+extern ResourceInfo naturalWonderResources[];

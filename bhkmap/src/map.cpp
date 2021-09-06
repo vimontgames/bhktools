@@ -40,20 +40,30 @@ void Map::refresh()
     // load resource textures if needed
     for (u32 i = 0; i < (u32)StrategicResource::Count; ++i)
     {
-        Texture & tex = strategicResourceTextures[i];
+        ResourceInfo & shared = strategicResources[i];
+        Texture & tex = shared.texture;
         if (Vector2u(0, 0) == tex.getSize())
             tex.loadFromFile("data/img/" + strategicResources[i].name + ".png");
+        shared.count = 0;
     }
 
     for (u32 i = 0; i < (u32)LuxuryResource::Count; ++i)
     {
-        Texture & tex = luxuryResourceTextures[i];
+        ResourceInfo & shared = luxuryResources[i];
+        Texture & tex = shared.texture;
         if (Vector2u(0, 0) == tex.getSize())
             tex.loadFromFile("data/img/" + luxuryResources[i].name + ".png");
+        shared.count = 0;
     }
 
-    if (Vector2u(0,0) == wonderTexture.getSize())
-        wonderTexture.loadFromFile("data/img/wonder.png");
+    for (u32 i = 0; i < (u32)NaturalWonderResource::Count; ++i)
+    {
+        ResourceInfo & shared = naturalWonderResources[i];
+        Texture & tex = shared.texture;
+        if (Vector2u(0, 0) == tex.getSize())
+            tex.loadFromFile("data/img/wonder.png");
+        shared.count = 0;
+    }
 
     for (u32 i = 0; i < MapBitmap::Count; ++i)
     {
@@ -101,10 +111,22 @@ void Map::refresh()
             // Natural Wonders
             const ubyte naturalWonderIndex = naturalwonders[offset];
 
+            // Tile
+            const ubyte tileIndex = (elevation[offset] >> 8) & 0x0F;
+
             switch (territoryBackground)
             {
                 case TerritoryBackground::None:
                     break;
+
+                case TerritoryBackground::Tile:
+                {
+                    territoryColor.r = 0;
+                    territoryColor.g = tileIndex;
+                    territoryColor.b = TEXEL_FLAG_VISIBLE;
+                    territoryColor.a = territoryIndex;
+                }
+                break;
 
                 case TerritoryBackground::Territory:
                 {
@@ -179,17 +201,23 @@ void Map::refresh()
             {
                 if (0xFF != wonderIndex)
                 {
-                    resColor = ColorFloat4ToUbyte4(naturalWondersInfo[wonderIndex].color);
+                    ResourceInfo & wonder = naturalWonderResources[wonderIndex]; 
 
-                    Texture & tex = wonderTexture;
-                    tex.setSmooth(false);
-                    Sprite resSprite;
-                    resSprite.setTexture(tex);
-                    resSprite.setColor(resColor);
-                    resSprite.setOrigin(Vector2f(tex.getSize().x*0.5f, tex.getSize().y*0.5f));
-                    resSprite.setPosition(Vector2f((float(w) + 0.5f)*scale.x, (float(h) + 0.5f)*scale.y));
-                    resSprite.move(spriteOffset);
-                    resources.sprites.push_back(resSprite);
+                    if (naturalWonderResources[wonderIndex].visible)
+                    {
+                        resColor = ColorFloat4ToUbyte4(wonder.color);
+
+                        wonder.texture.setSmooth(true);
+                        Sprite resSprite;
+                        resSprite.setTexture(wonder.texture);
+                        resSprite.setColor(resColor);
+                        resSprite.setOrigin(Vector2f(wonder.texture.getSize().x*0.5f, wonder.texture.getSize().y*0.5f));
+                        resSprite.setPosition(Vector2f((float(w) + 0.5f)*scale.x, (float(h) + 0.5f)*scale.y));
+                        resSprite.move(spriteOffset);
+                        resources.sprites.push_back(resSprite);
+                    }
+
+                    wonder.count++;
                 }
             }
 
@@ -198,21 +226,23 @@ void Map::refresh()
                 if (resourceIndex >= (u32)LuxuryResource::First && resourceIndex <= (u32)LuxuryResource::Last)
                 {
                     const u32 luxuryIndex = resourceIndex - (u32)LuxuryResource::First;
+                    ResourceInfo & luxury = luxuryResources[luxuryIndex];
 
-                    if (luxuryResources[luxuryIndex].visible)
+                    if (luxury.visible)
                     {
-                        resColor = ColorFloat4ToUbyte4(luxuryResources[luxuryIndex].color);
-
-                        Texture & tex = luxuryResourceTextures[luxuryIndex];
-                        tex.setSmooth(false);
+                        resColor = ColorFloat4ToUbyte4(luxury.color);
+                   
+                        luxury.texture.setSmooth(true);
                         Sprite resSprite;
-                        resSprite.setTexture(tex);
+                        resSprite.setTexture(luxury.texture);
                         resSprite.setColor(resColor);
-                        resSprite.setOrigin(Vector2f(tex.getSize().x*0.5f, tex.getSize().y*0.5f));
+                        resSprite.setOrigin(Vector2f(luxury.texture.getSize().x*0.5f, luxury.texture.getSize().y*0.5f));
                         resSprite.setPosition(Vector2f((float(w) + 0.5f)*scale.x, (float(h) + 0.5f)*scale.y));
                         resSprite.move(spriteOffset);
                         resources.sprites.push_back(resSprite);
                     }
+
+                    luxury.count++;
                 }
             }
 
@@ -221,21 +251,23 @@ void Map::refresh()
                 if (resourceIndex >= (u32)StrategicResource::First && resourceIndex <= (u32)StrategicResource::Last)
                 {
                     const u32 strategicIndex = resourceIndex - (u32)StrategicResource::First;
+                    ResourceInfo & strategic = strategicResources[strategicIndex];
 
-                    if (strategicResources[strategicIndex].visible)
+                    if (strategic.visible)
                     {
-                        resColor = ColorFloat4ToUbyte4(strategicResources[strategicIndex].color);
+                        resColor = ColorFloat4ToUbyte4(strategic.color);
 
-                        Texture & tex = strategicResourceTextures[strategicIndex];
-                        tex.setSmooth(false);
+                        strategic.texture.setSmooth(true);
                         Sprite resSprite;
-                        resSprite.setTexture(tex);
+                        resSprite.setTexture(strategic.texture);
                         resSprite.setColor(resColor);
-                        resSprite.setOrigin(Vector2f(tex.getSize().x*0.5f, tex.getSize().y*0.5f));
+                        resSprite.setOrigin(Vector2f(strategic.texture.getSize().x*0.5f, strategic.texture.getSize().y*0.5f));
                         resSprite.setPosition(Vector2f((float(w) + 0.5f)*scale.x, (float(h) + 0.5f)*scale.y));
                         resSprite.move(spriteOffset);
                         resources.sprites.push_back(resSprite);
                     }
+
+                    strategic.count++;
                 }
             }
 
@@ -376,50 +408,50 @@ void Map::loadHMap(const string & _map, const string & _cwd)
 
     // load natural wonders info
     {
-        XMLElement * xmlNaturalWonderNames = xmlTerrainSave->FirstChildElement("NaturalWonderNames");
-        u32 naturalWonderNameCount = 0;
-        xmlErr = xmlNaturalWonderNames->QueryUnsignedAttribute("Length", &naturalWonderNameCount);
-
-        naturalWondersInfo.clear();
-        naturalWondersInfo.reserve(naturalWonderNameCount);
-
-        XMLNode * xmlWonderNameNode = xmlNaturalWonderNames->FirstChildElement("String");
-
-        int i = 0;
-
-        ColorFloat4 wonderColors[] = 
-        {
-            {1.00f, 1.00f, 0.50f, 1.00f},
-            {0.00f, 1.00f, 1.00f, 1.00f},
-            {0.00f, 0.00f, 1.00f, 1.00f},
-            {0.00f, 0.60f, 1.00f, 1.00f},
-            {0.00f, 0.80f, 1.00f, 1.00f},
-            {0.00f, 0.40f, 1.00f, 1.00f},
-            {0.00f, 0.20f, 1.00f, 1.00f},
-            {0.90f, 0.90f, 0.90f, 1.00f},
-            {0.80f, 0.80f, 0.80f, 1.00f},
-            {0.70f, 0.70f, 0.70f, 1.00f},
-            {0.70f, 0.00f, 0.00f, 1.00f},
-            {0.75f, 0.75f, 1.00f, 1.00f},
-            {0.90f, 1.00f, 0.60f, 1.00f},
-            {1.00f, 1.00f, 0.00f, 1.00f},
-        };
-
-        while (xmlWonderNameNode)
-        {
-            string name = xmlWonderNameNode->FirstChild()->ToText()->Value();
-            
-            NaturalWonder wonder;
-
-            wonder.name = name;
-
-            wonder.color = wonderColors[i % _countof(wonderColors)];
-
-            naturalWondersInfo.push_back(wonder);
-
-            xmlWonderNameNode = xmlWonderNameNode->NextSiblingElement("String");
-            ++i;
-        }
+        //XMLElement * xmlNaturalWonderNames = xmlTerrainSave->FirstChildElement("NaturalWonderNames");
+        //u32 naturalWonderNameCount = 0;
+        //xmlErr = xmlNaturalWonderNames->QueryUnsignedAttribute("Length", &naturalWonderNameCount);
+        //
+        //naturalWondersInfo.clear();
+        //naturalWondersInfo.reserve(naturalWonderNameCount);
+        //
+        //XMLNode * xmlWonderNameNode = xmlNaturalWonderNames->FirstChildElement("String");
+        //
+        //int i = 0;
+        //
+        //ColorFloat4 wonderColors[] = 
+        //{
+        //    {1.00f, 1.00f, 0.50f, 1.00f},
+        //    {0.00f, 1.00f, 1.00f, 1.00f},
+        //    {0.00f, 0.00f, 1.00f, 1.00f},
+        //    {0.00f, 0.60f, 1.00f, 1.00f},
+        //    {0.00f, 0.80f, 1.00f, 1.00f},
+        //    {0.00f, 0.40f, 1.00f, 1.00f},
+        //    {0.00f, 0.20f, 1.00f, 1.00f},
+        //    {0.90f, 0.90f, 0.90f, 1.00f},
+        //    {0.80f, 0.80f, 0.80f, 1.00f},
+        //    {0.70f, 0.70f, 0.70f, 1.00f},
+        //    {0.70f, 0.00f, 0.00f, 1.00f},
+        //    {0.75f, 0.75f, 1.00f, 1.00f},
+        //    {0.90f, 1.00f, 0.60f, 1.00f},
+        //    {1.00f, 1.00f, 0.00f, 1.00f},
+        //};
+        //
+        //while (xmlWonderNameNode)
+        //{
+        //    string name = xmlWonderNameNode->FirstChild()->ToText()->Value();
+        //    
+        //    NaturalWonder wonder;
+        //
+        //    wonder.name = name;
+        //
+        //    wonder.color = wonderColors[i % _countof(wonderColors)];
+        //
+        //    naturalWondersInfo.push_back(wonder);
+        //
+        //    xmlWonderNameNode = xmlWonderNameNode->NextSiblingElement("String");
+        //    ++i;
+        //}
     }
 
     // load territories info

@@ -57,32 +57,58 @@ void main()
 
     uint4 index = uint4(center.rgba * 255.0f);
     
+    uint tileIndex = index.g;
     uint biomeIndex = index.g;
     uint landmarkIndex = index.g;
     uint flags = index.b;
     uint territoryIndex = index.a;
     
     float3 color = float3(0,0,0);
+
+    float3 tileColor[15] =
+    {
+        float3(0.0f,0.0f,0.0f), // unused
+        float3(0.3f,0.7f,1.0f), // coastal
+        float3(0.6f,0.7f,0.3f), // dry
+        float3(0.0f,0.5f,0.0f), // forest
+        float3(0.0f,0.4f,0.7f), // lake
+        float3(0.5f,0.2f,0.0f), // mountain
+        float3(0.9f,0.8f,0.7f), // moutain snow
+        float3(0.2f,0.6f,0.9f), // ocean
+        float3(0.5f,1.0f,0.0f), // prairie
+        float3(0.5f,0.8f,0.3f), // rocky field
+        float3(0.3f,0.6f,0.2f), // rocky forest
+        float3(0.5f,0.5f,0.5f), // sterile
+        float3(0.7f,0.7f,0.7f), // stone field
+        float3(0.9f,0.7f,0.1f), // wasteland
+        float3(0.4f,0.5f,0.0f)  // woodland
+    };
     
-    switch (passFlags & 0xF)
+    int passIndex = passFlags & PASS_TYPE_MASK;
+    switch (passIndex)
     {
         default:
             color = center.g;
             break;
 
-        case PASS_FLAG_TERRITORY:
+        case PASS_TYPE_TILE:
+            color = tileColor[tileIndex % 15];
+            edgeOpacity = 0.75f;
+            break;
+
+        case PASS_TYPE_TERRITORY:
             color = territoryColor[territoryIndex % 6];
             break;
     
-        case PASS_FLAG_LANDMARK:
+        case PASS_TYPE_LANDMARK:
             color = landmarkColors[landmarkIndex % 5];
             break;
     
-        case PASS_FLAG_BIOME:
+        case PASS_TYPE_BIOME:
             color = biomeColors[biomeIndex % 10];
             break;
 
-        case PASS_FLAG_WONDER:
+        case PASS_TYPE_WONDER:
             color = 1;
             break;
     }     
@@ -92,7 +118,7 @@ void main()
     bool visible = 0 != (flags & TEXEL_FLAG_VISIBLE);
     bool water = 0 != (flags & TEXEL_FLAG_WATER);
     
-    if (water)
+    if (water && PASS_TYPE_TILE != passIndex)
     {
         color = lerp(color, float3(0, 0, 1), 0.75f);
         edgeColor = float3(0, 0, 1);

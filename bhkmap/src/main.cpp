@@ -101,7 +101,7 @@ int main()
     if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_MYDOCUMENTS, NULL, CSIDL_MYDOCUMENTS, userFolder)))
         g_myDocumentsPath = ws2s(wstring(userFolder)) + "\\Humankind\\Maps";
 
-    RenderWindow window(VideoMode(g_screenWidth, g_screenHeight), "bhkmap 0.3", Style::Titlebar | Style::Resize | Style::Close);
+    RenderWindow window(VideoMode(g_screenWidth, g_screenHeight), "bhkmap 0.31", Style::Titlebar | Style::Resize | Style::Close);
     window.setFramerateLimit(60);
     Init(window);
 
@@ -287,12 +287,13 @@ int main()
 
                         ImGui::Text((to_string((int)g_mouseWheelDelta)).c_str());
                     }
+
+                    ImGui::TreePop();
                 }
-                ImGui::TreePop();
 
                 ImGui::Columns(1);
 
-                TreeNodeEx("View", ImGuiTreeNodeFlags_DefaultOpen);
+                if (TreeNodeEx("View", ImGuiTreeNodeFlags_DefaultOpen))
                 {
                     Columns(2, "mycolumns2", false);
                     {
@@ -312,8 +313,9 @@ int main()
                         sprintf_s(tmp, "%.1f", g_cameraZoom);
                         ImGui::Text(tmp);
                     }
+
+                    TreePop();
                 }
-                TreePop();
             }
 
             ImGui::End();
@@ -362,8 +364,9 @@ int main()
 
                         territory.ocean = territory.continent == 0;
                         PopItemWidth();
+
+                        TreePop();
                     }
-                    TreePop();
                 }
             }
             ImGui::End();
@@ -396,8 +399,8 @@ int main()
                         needRefresh |= Combo("Definition", (int*)&landmark.definitonIndex, "Desert\0Forest\0Lake\0Mountain\0River\0\0");
 
                         PopItemWidth();
+                        TreePop();
                     }
-                    TreePop();
                 }
             }
             ImGui::End();
@@ -419,7 +422,7 @@ int main()
                 if (TreeNodeEx("Map", ImGuiTreeNodeFlags_DefaultOpen))
                 {
                     PushItemWidth(g_comboxItemWidth);
-                    needRefresh |= Combo("Filter", (int*)&g_map.territoryBackground, "None\0Territories\0Biomes\0Landmarks\0Wonders\0\0");
+                    needRefresh |= Combo("Filter", (int*)&g_map.territoryBackground, "None\0Tile\0Territories\0Biomes\0Landmarks\0Wonders\0\0");
                     PopItemWidth();
 
                     needRefresh |= Checkbox(getFixedSizeString("Borders", g_fixedTextLengthShort).c_str(), &g_map.showTerritoriesBorders);
@@ -449,6 +452,9 @@ int main()
                             ImGui::SameLine();
                             float * pFloat = (float*)&info.color.rgba[0];
                             changed |= ImGui::ColorEdit4(info.name.c_str(), pFloat, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_Float | ImGuiColorEditFlags_NoLabel);
+
+                            ImGui::SameLine();
+                            ImGui::Text(to_string(_infos[index].count).c_str());
                         }
                         ImGui::Unindent();
 
@@ -466,20 +472,7 @@ int main()
                     needRefresh |= ImGui::Checkbox(getFixedSizeString("Wonders", g_fixedTextLengthShort).c_str(), &g_map.showWonders);
 
                     if (g_map.showWonders)
-                    {
-                        ImGui::Indent();
-                        for (u32 i = 0; i < g_map.naturalWondersInfo.size(); ++i)
-                        {
-                            auto & wonder = g_map.naturalWondersInfo[i];
-
-                            needRefresh |= ImGui::Checkbox(getFixedSizeString(wonder.name.c_str(), g_fixedTextLengthLarge).c_str(), &wonder.visible);
-
-                            ImGui::SameLine();
-                            float * pFloat = (float*)&wonder.color.rgba[0];
-                            needRefresh |= ImGui::ColorEdit4(wonder.name.c_str(), pFloat, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_Float | ImGuiColorEditFlags_NoLabel);
-                        }
-                        ImGui::Unindent();
-                    }
+                        needRefresh |= ListResources(naturalWonderResources, (u32)StrategicResource::First, (u32)StrategicResource::Last);
 
                     g_map.bitmaps[Resources].visible = g_map.showStrategicResources || g_map.showLuxuryResources || g_map.showWonders;
 
@@ -501,7 +494,7 @@ int main()
                 
                 ImGui::Separator();
 
-                ImGui::Text("Example:\nIn order to fix a map corrupted by adding landmarks in the official editor, you have to remove them using the \"Clear All Landmarks\" button from the \"Landmarks\" tab then select \"Modify landmarks\" and click \"Save\".");
+                ImGui::Text("Example:\nIn order to fix a map corrupted by adding landmarks in the official editor, you have to remove them using the \"Remove All Landmarks\" button from the \"Landmarks\" tab then select \"Modify landmarks\" and click \"Save\".");
 
                 PopTextWrapPos();
 
@@ -640,20 +633,24 @@ int main()
                             case TerritoryBackground::None:
                             break;
 
+                            case TerritoryBackground::Tile:
+                                passFlags = PASS_TYPE_TILE;
+                                break;
+
                             case TerritoryBackground::Territory:
-                                passFlags = PASS_FLAG_TERRITORY;
+                                passFlags = PASS_TYPE_TERRITORY;
                             break;
 
                             case TerritoryBackground::Biome:
-                                passFlags = PASS_FLAG_BIOME;
+                                passFlags = PASS_TYPE_BIOME;
                             break;
 
                             case TerritoryBackground::Landmarks:
-                                passFlags = PASS_FLAG_LANDMARK;
+                                passFlags = PASS_TYPE_LANDMARK;
                             break;
 
                             case TerritoryBackground::Wonders:
-                                passFlags = PASS_FLAG_WONDER;
+                                passFlags = PASS_TYPE_WONDER;
                             break;
                         }
 

@@ -58,6 +58,7 @@ struct Bitmap
 enum class TerritoryBackground : u32
 {
     None = 0,
+    Tile,
     Territory,
     Biome,
     Landmarks,
@@ -103,7 +104,7 @@ struct Map
 
     std::vector<Territory> territoriesInfo;
     std::vector<Landmark> landmarkInfo;
-    std::vector<NaturalWonder> naturalWondersInfo;
+    //std::vector<NaturalWonder> naturalWondersInfo;
 
     Bitmap bitmaps[MapBitmap::Count];
 
@@ -116,10 +117,6 @@ struct Map
     bool showStrategicResources = false;
     bool showLuxuryResources = false;
     bool showWonders = false;
-
-    sf::Texture strategicResourceTextures[(u32)StrategicResource::Count];
-    sf::Texture luxuryResourceTextures[(u32)LuxuryResource::Count];
-    sf::Texture wonderTexture;
 
     tinyxml2::XMLDocument xmlDocDescriptor;
     tinyxml2::XMLDocument xmlDocSave;
