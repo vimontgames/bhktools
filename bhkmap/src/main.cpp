@@ -23,7 +23,8 @@ static ImGuiFileBrowser g_fileDialog;
 static string g_myDocumentsPath;
 static string g_currentWorkingDirectory;
 static float g_comboxItemWidth = 120;
-static const u32 g_fixedTextLength = 10;
+static const u32 g_fixedTextLengthShort = 10;
+static const u32 g_fixedTextLengthLarge = 20;
 
 bool g_openFileDialog = false;
 bool g_saveFileDialog = false;
@@ -34,7 +35,7 @@ bool g_openInfoWindow = true;
 bool g_openTerritoriesWindow = true;
 bool g_openLandmarksWindow = true;
 bool g_openWondersWindow = true;
-bool g_openDebugWindow = true;
+bool g_openDebugWindow = false;
 
 bool g_openHelpWindow = true;
 bool g_openAboutWindow = false;
@@ -100,7 +101,7 @@ int main()
     if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_MYDOCUMENTS, NULL, CSIDL_MYDOCUMENTS, userFolder)))
         g_myDocumentsPath = ws2s(wstring(userFolder)) + "\\Humankind\\Maps";
 
-    RenderWindow window(VideoMode(g_screenWidth, g_screenHeight), "bhkmap 0.24", Style::Titlebar | Style::Resize | Style::Close);
+    RenderWindow window(VideoMode(g_screenWidth, g_screenHeight), "bhkmap 0.3", Style::Titlebar | Style::Resize | Style::Close);
     window.setFramerateLimit(60);
     Init(window);
 
@@ -220,15 +221,13 @@ int main()
                 ImGui::EndMenu();
             }
 
-            if (ImGui::BeginMenu("About"))
-            {
-                ImGui::Separator();
-
-                if (ImGui::MenuItem("bhkmap", nullptr, g_openAboutWindow))
-                    g_openAboutWindow ^= 1;
-
-                ImGui::EndMenu();
-            }
+            //if (ImGui::BeginMenu("About"))
+            //{
+            //    if (ImGui::MenuItem("bhkmap", nullptr, g_openAboutWindow))
+            //        g_openAboutWindow ^= 1;
+            //
+            //    ImGui::EndMenu();
+            //}
 
             ImGui::EndMenuBar();
         }
@@ -423,10 +422,10 @@ int main()
                     needRefresh |= Combo("Filter", (int*)&g_map.territoryBackground, "None\0Territories\0Biomes\0Landmarks\0Wonders\0\0");
                     PopItemWidth();
 
-                    needRefresh |= Checkbox(getFixedSizeString("Borders", g_fixedTextLength).c_str(), &g_map.showTerritoriesBorders);
+                    needRefresh |= Checkbox(getFixedSizeString("Borders", g_fixedTextLengthShort).c_str(), &g_map.showTerritoriesBorders);
 
                     ImGui::SameLine();
-                    needRefresh |= Checkbox(getFixedSizeString("Hexes", g_fixedTextLength).c_str(), &g_map.useHexUVs); 
+                    needRefresh |= Checkbox(getFixedSizeString("Hexes", g_fixedTextLengthShort).c_str(), &g_map.useHexUVs);
 
 
                     g_map.bitmaps[Territories].visible = g_map.territoryBackground != TerritoryBackground::None;
@@ -446,7 +445,7 @@ int main()
                             const u32 index = i - _first;
                             auto & info = _infos[index];
 
-                            changed |= ImGui::Checkbox(getFixedSizeString(info.name.c_str(), g_fixedTextLength).c_str(), &info.visible);
+                            changed |= ImGui::Checkbox(getFixedSizeString(info.name.c_str(), g_fixedTextLengthLarge).c_str(), &info.visible);
                             ImGui::SameLine();
                             float * pFloat = (float*)&info.color.rgba[0];
                             changed |= ImGui::ColorEdit4(info.name.c_str(), pFloat, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_Float | ImGuiColorEditFlags_NoLabel);
@@ -456,15 +455,15 @@ int main()
                         return changed;
                     };
 
-                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Strategic", g_fixedTextLength).c_str(), &g_map.showStrategicResources);
+                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Strategic", g_fixedTextLengthShort).c_str(), &g_map.showStrategicResources);
                     if (g_map.showStrategicResources)
                         needRefresh |= ListResources(strategicResources, (u32)StrategicResource::First, (u32)StrategicResource::Last);
 
-                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Luxury", g_fixedTextLength).c_str(), &g_map.showLuxuryResources);
+                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Luxury", g_fixedTextLengthShort).c_str(), &g_map.showLuxuryResources);
                     if (g_map.showLuxuryResources)
                         needRefresh |= ListResources(luxuryResources, (u32)LuxuryResource::First, (u32)LuxuryResource::Last);
 
-                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Wonders", g_fixedTextLength).c_str(), &g_map.showWonders);
+                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Wonders", g_fixedTextLengthShort).c_str(), &g_map.showWonders);
 
                     if (g_map.showWonders)
                     {
@@ -473,7 +472,7 @@ int main()
                         {
                             auto & wonder = g_map.naturalWondersInfo[i];
 
-                            needRefresh |= ImGui::Checkbox(getFixedSizeString(wonder.name.c_str(), 20).c_str(), &wonder.visible);
+                            needRefresh |= ImGui::Checkbox(getFixedSizeString(wonder.name.c_str(), g_fixedTextLengthLarge).c_str(), &wonder.visible);
 
                             ImGui::SameLine();
                             float * pFloat = (float*)&wonder.color.rgba[0];

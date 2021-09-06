@@ -14,6 +14,11 @@ SFML=G:\SFML\SFML-2.5.1
 
 # Changelog
 
+v0.3
+-----
+* Fix resource draw order
+* Clean unused menus
+
 v0.24
 -----
 * Replicate hexes distortion on textures and icons

@@ -175,6 +175,24 @@ void Map::refresh()
             if (useHexUVs)
                 spriteOffset.x = (h & 1) ? -0.25f * cellWidth : +0.25f * cellWidth;
 
+            if (showWonders)
+            {
+                if (0xFF != wonderIndex)
+                {
+                    resColor = ColorFloat4ToUbyte4(naturalWondersInfo[wonderIndex].color);
+
+                    Texture & tex = wonderTexture;
+                    tex.setSmooth(false);
+                    Sprite resSprite;
+                    resSprite.setTexture(tex);
+                    resSprite.setColor(resColor);
+                    resSprite.setOrigin(Vector2f(tex.getSize().x*0.5f, tex.getSize().y*0.5f));
+                    resSprite.setPosition(Vector2f((float(w) + 0.5f)*scale.x, (float(h) + 0.5f)*scale.y));
+                    resSprite.move(spriteOffset);
+                    resources.sprites.push_back(resSprite);
+                }
+            }
+
             if (showLuxuryResources)
             {
                 if (resourceIndex >= (u32)LuxuryResource::First && resourceIndex <= (u32)LuxuryResource::Last)
@@ -218,24 +236,6 @@ void Map::refresh()
                         resSprite.move(spriteOffset);
                         resources.sprites.push_back(resSprite);
                     }
-                }
-            }
-
-            if (showWonders)
-            {
-                if (0xFF != wonderIndex)
-                {
-                    resColor = ColorFloat4ToUbyte4(naturalWondersInfo[wonderIndex].color);
-                
-                    Texture & tex = wonderTexture;
-                    tex.setSmooth(false);
-                    Sprite resSprite;
-                    resSprite.setTexture(tex);
-                    resSprite.setColor(resColor);
-                    resSprite.setOrigin(Vector2f(tex.getSize().x*0.5f, tex.getSize().y*0.5f));
-                    resSprite.setPosition(Vector2f((float(w) + 0.5f)*scale.x, (float(h) + 0.5f)*scale.y));
-                    resSprite.move(spriteOffset);
-                    resources.sprites.push_back(resSprite);
                 }
             }
 
