@@ -84,7 +84,7 @@ public:
 };
 dbg_stream_for_cout g_DebugStreamFor_cout;
 
-const char * title = "bhkmap 0.32";
+const char * title = "bhkmap 0.33";
 
 //--------------------------------------------------------------------------------------
 int main() 
@@ -200,7 +200,7 @@ int main()
                 if (ImGui::MenuItem("Display", nullptr, g_openDisplayWindow))
                     g_openDisplayWindow ^= 1;
 
-                if (ImGui::MenuItem("Info",nullptr, g_openInfoWindow))
+                if (ImGui::MenuItem("Infos",nullptr, g_openInfoWindow))
                     g_openInfoWindow ^= 1;
 
                 if (ImGui::MenuItem("Landmarks", nullptr, g_openLandmarksWindow))
@@ -242,7 +242,7 @@ int main()
             {
                 ImGui::Columns(2, "mycolumns2", false);
                 {
-                    SetColumnWidth(0, 64.0f);
+                    SetColumnWidth(0, 96.0f);
 
                     ImGui::Text("Pan");
                     ImGui::Text("Zoom");
@@ -324,13 +324,12 @@ int main()
 
         if (g_openInfoWindow)
         {
-            if (Begin("Info", &g_openInfoWindow))
+            if (Begin("Infos", &g_openInfoWindow))
             {
                 ImGui::Columns(2, "mycolumns2", false);  // 2-ways, no border
                 {
-                    SetColumnWidth(0, 64.0f);
-
-                    ImGui::Text("Author");
+                    SetColumnWidth(0, 96.0f);
+                    ImGui::Text("Author");;
                     ImGui::Text("Width");
                     ImGui::Text("Height");
                 }
@@ -339,6 +338,16 @@ int main()
                     ImGui::Text(g_map.author.c_str());
                     ImGui::Text(to_string(g_map.width).c_str());
                     ImGui::Text(to_string(g_map.height).c_str());
+                }
+
+                ImGui::Columns(1);
+
+                if (TreeNodeEx("Options", ImGuiTreeNodeFlags_DefaultOpen))
+                {
+                    ImGui::Checkbox(getFixedSizeString("Map cycling", g_fixedTextLengthShort).c_str(), &g_map.useMapCycling);
+                    ImGui::Checkbox(getFixedSizeString("Procedural mountain chains", g_fixedTextLengthShort).c_str(), &g_map.useProceduralMountainChains);
+
+                    TreePop();
                 }
             }
 
@@ -474,7 +483,7 @@ int main()
                     if (g_map.showWonders)
                         needRefresh |= ListResources(naturalWonderResources, (u32)StrategicResource::First, (u32)StrategicResource::Last);
 
-                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Players", g_fixedTextLengthShort).c_str(), &g_map.showSpawnPoints);
+                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Spawns", g_fixedTextLengthShort).c_str(), &g_map.showSpawnPoints);
                     if (g_map.showSpawnPoints)
                     {
                         PushItemWidth(g_comboxItemWidth);
@@ -510,14 +519,12 @@ int main()
             {
                 PushTextWrapPos();
 
-                ImGui::Text("Categories that are not selected here for export will not reflect the changes made in bhkmap and will use the original file values.");
+                ImGui::Text("Unselected categories will not export the changes made in bhkmap and will keep their original values.");
                 ImGui::Text("\n");
 
-                ImGui::Text("i.e.\nYou can fix a corrupted map by importing it in bhkmap, removing all larndmarks then export it with the \"Override landmarks\" option checked.");
-                ImGui::Text("\n");
-
-                ImGui::Checkbox(getFixedSizeString("Override player spawns", g_fixedTextLengthShort).c_str(), &g_map.overridePlayerSpawns);
-                ImGui::Checkbox(getFixedSizeString("Override landmarks", g_fixedTextLengthShort).c_str(), &g_map.overrideLandmarks);
+                ImGui::Checkbox(getFixedSizeString("Infos", g_fixedTextLengthShort).c_str(), &g_map.overrideMapOptions);
+                ImGui::Checkbox(getFixedSizeString("Spawns", g_fixedTextLengthShort).c_str(), &g_map.overridePlayerSpawns);
+                ImGui::Checkbox(getFixedSizeString("Landmarks", g_fixedTextLengthShort).c_str(), &g_map.overrideLandmarks);
                 ImGui::Text("\n");  
                 
                 if (ImGui::Button("Export"))

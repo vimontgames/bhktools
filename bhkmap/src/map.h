@@ -137,9 +137,13 @@ struct Map
     bool showWonders = false;
     bool showSpawnPoints = false;
 
+    bool useMapCycling = false;
+    bool useProceduralMountainChains = false;
+
     tinyxml2::XMLDocument xmlDocDescriptor;
     tinyxml2::XMLDocument xmlDocSave;
 
+    bool overrideMapOptions = true;
     bool overridePlayerSpawns = true;
     bool overrideLandmarks = true;
 

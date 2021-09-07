@@ -14,6 +14,13 @@ SFML=G:\SFML\SFML-2.5.1
 
 # Changelog
 
+v0.33
+-----
+* Export "UseMapCycling"
+* Export "UseProceduralMountainChains"
+
+![ScreenShot033](doc/img/screen033.png?raw=true "Screenshot033")
+
 v0.32
 -----
 * Display player spawns

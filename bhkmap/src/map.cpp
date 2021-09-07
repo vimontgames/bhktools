@@ -438,6 +438,9 @@ bool Map::loadHMap(const string & _map, const string & _cwd)
     xmlErr = xmlTerrainSave->FirstChildElement("Width")->ToElement()->QueryUnsignedText(&width);
     xmlErr = xmlTerrainSave->FirstChildElement("Height")->ToElement()->QueryUnsignedText(&height);
 
+    xmlErr = xmlTerrainSave->FirstChildElement("UseMapCycling")->ToElement()->QueryBoolText(&useMapCycling);
+    xmlErr = xmlTerrainSave->FirstChildElement("UseProceduralMountainChains")->ToElement()->QueryBoolText(&useProceduralMountainChains);
+
     XMLElement * xmlElevation = xmlTerrainSave->FirstChildElement("ElevationTexture.Bytes");
     u32 elevationLength = 0;
     xmlErr = xmlElevation->QueryUnsignedAttribute("Length", &elevationLength);
@@ -651,6 +654,12 @@ void Map::saveHMap(string & _map, const string & _cwd)
     XMLElement * xmlDoc = xmlDocSave.FirstChildElement("Document");
     XMLElement * xmlTerrainSave = xmlDoc->FirstChildElement("TerrainSave");
 
+    if (overrideMapOptions)
+    {
+        xmlTerrainSave->FirstChildElement("UseMapCycling")->FirstChild()->SetValue(useMapCycling ? "true" : "false");
+        xmlTerrainSave->FirstChildElement("UseProceduralMountainChains")->FirstChild()->SetValue(useProceduralMountainChains ? "true" : "false");
+    }
+
     if (overrideLandmarks)
     {
         XMLNode * xmlLandmarkDatabase = xmlTerrainSave->FirstChildElement("LandmarkDatabase");
@@ -659,7 +668,6 @@ void Map::saveHMap(string & _map, const string & _cwd)
         {
             if (landmarkInfo.empty())
             {
-
                 XMLElement * xmlLandarks = xmlLandmarkDatabase->FirstChildElement("Landmarks");
                 xmlLandarks->DeleteAttribute("Length");
                 xmlLandarks->DeleteChildren();
