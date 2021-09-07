@@ -13,8 +13,9 @@
 #define PASS_FLAG_BORDERS   0x40000000
 #define PASS_FLAG_HEXES     0x80000000
 
-#define TEXEL_FLAG_WATER    0x40
-#define TEXEL_FLAG_VISIBLE  0x80
+#define TEXEL_FLAG_WATER_TILE       0x20
+#define TEXEL_FLAG_OCEAN_TERRITORY  0x40
+#define TEXEL_FLAG_VISIBLE          0x80
 
 #ifndef __cplusplus
 uniform int passFlags;

@@ -14,6 +14,14 @@ SFML=G:\SFML\SFML-2.5.1
 
 # Changelog
 
+v0.32
+-----
+* Display player spawns
+* Improve heightfield and territory shader to show continent and island shapes better
+* Increase max shader read buffer size from 4k to 16k to handle bigger files
+
+![ScreenShot032](doc/img/screen032.png?raw=true "Screenshot032")
+
 v0.31
 -----
 * Display tile type

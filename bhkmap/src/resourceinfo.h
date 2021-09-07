@@ -99,3 +99,28 @@ enum class NaturalWonderResource
 extern ResourceInfo luxuryResources[];
 extern ResourceInfo strategicResources[];
 extern ResourceInfo naturalWonderResources[];
+
+enum class TileType
+{
+    Coastal = 1,
+    Dry,
+    Forest,
+    Lake,
+    Mountain,
+    MoutainSnow,
+    Ocean,
+    Prairie,
+    RockyField,
+    RockyForest,
+    Sterile,
+    StoneField,
+    Wasteland,
+    Woodland,
+
+    Invalid = 0,
+
+    First = Coastal,
+    Last = Woodland,
+
+    Count = Last - First + 1
+};

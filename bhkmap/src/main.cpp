@@ -84,6 +84,8 @@ public:
 };
 dbg_stream_for_cout g_DebugStreamFor_cout;
 
+const char * title = "bhkmap 0.32";
+
 //--------------------------------------------------------------------------------------
 int main() 
 {
@@ -101,7 +103,7 @@ int main()
     if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_MYDOCUMENTS, NULL, CSIDL_MYDOCUMENTS, userFolder)))
         g_myDocumentsPath = ws2s(wstring(userFolder)) + "\\Humankind\\Maps";
 
-    RenderWindow window(VideoMode(g_screenWidth, g_screenHeight), "bhkmap 0.31", Style::Titlebar | Style::Resize | Style::Close);
+    RenderWindow window(VideoMode(g_screenWidth, g_screenHeight), title, Style::Titlebar | Style::Resize | Style::Close);
     window.setFramerateLimit(60);
     Init(window);
 
@@ -179,10 +181,10 @@ int main()
         {
             if (ImGui::BeginMenu("File"))
             {
-                if (ImGui::MenuItem("Open"))
+                if (ImGui::MenuItem("Import"))
                     g_openFileDialog = true;
 
-                if(ImGui::MenuItem("Save"))
+                if(ImGui::MenuItem("Export"))
                     g_saveFileDialog = true;
 
                 ImGui::Separator();
@@ -238,7 +240,6 @@ int main()
         {
             if (Begin("Help", &g_openHelpWindow))
             {
-
                 ImGui::Columns(2, "mycolumns2", false);
                 {
                     SetColumnWidth(0, 64.0f);
@@ -359,10 +360,10 @@ int main()
 
                         auto & territory = g_map.territoriesInfo[i];
                         
-                        needRefresh |= Combo("Continent", (int*)&territory.continent, "Ocean\0Continent 1\0Continent 2\0Continent 3\0Continent 4\0Continent 5\0Continent 6\0Continent 7\0");
+                        needRefresh |= Combo("Continent", (int*)&territory.continent, "Ocean\0Continent 1\0Continent 2\0Continent 3\0Continent 4\0Continent 5\0Continent 6\0Continent 7\0\0");
                         needRefresh |= Combo("Biome", (int*)&territory.biome, "Arctic\0Badlands\0Desert\0Grassland\0Meditarranean\0Savanna\0Taiga\0Temperate\0Tropical\0Tundra\0\0");
 
-                        territory.ocean = territory.continent == 0;
+                        territory.ocean = (territory.continent == 0) ? true : false;
                         PopItemWidth();
 
                         TreePop();
@@ -470,11 +471,30 @@ int main()
                         needRefresh |= ListResources(luxuryResources, (u32)LuxuryResource::First, (u32)LuxuryResource::Last);
 
                     needRefresh |= ImGui::Checkbox(getFixedSizeString("Wonders", g_fixedTextLengthShort).c_str(), &g_map.showWonders);
-
                     if (g_map.showWonders)
                         needRefresh |= ListResources(naturalWonderResources, (u32)StrategicResource::First, (u32)StrategicResource::Last);
 
-                    g_map.bitmaps[Resources].visible = g_map.showStrategicResources || g_map.showLuxuryResources || g_map.showWonders;
+                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Players", g_fixedTextLengthShort).c_str(), &g_map.showSpawnPoints);
+                    if (g_map.showSpawnPoints)
+                    {
+                        PushItemWidth(g_comboxItemWidth);
+
+                        ImGui::Indent();
+                        {
+                            for (u32 i = 0; i < _countof(g_map.spawnInfo); ++i)
+                            {
+                                needRefresh |= ImGui::RadioButton(getFixedSizeString(to_string(i + 1) + " player" + string(i ? "s" : ""), g_fixedTextLengthLarge).c_str(), (int*)&g_map.spawnPlayerCountDisplayed, int(i + 1));
+                                SameLine();
+                                ImGui::Text( "%u/%u", g_map.spawnInfo[i].spawns.size(), i + 1);
+                            }
+                        }
+                        ImGui::Unindent();
+                        
+                        PopItemWidth();
+                    }
+
+
+                    g_map.bitmaps[Resources].visible = g_map.showStrategicResources || g_map.showLuxuryResources || g_map.showWonders || g_map.showSpawnPoints;
 
                     ImGui::TreePop();
                 }
@@ -484,28 +504,23 @@ int main()
 
         if (g_saveOptionDialog)
         {
-            ImGui::OpenPopup("Select the changes to export");
+            ImGui::OpenPopup("Export options");
 
-            if (ImGui::BeginPopupModal("Select the changes to export", &g_saveOptionDialog))
+            if (ImGui::BeginPopupModal("Export options", &g_saveOptionDialog))
             {
                 PushTextWrapPos();
 
-                ImGui::Text("Categories that are not selected here will not reflect the changes made and will be exported with their original values.");
+                ImGui::Text("Categories that are not selected here for export will not reflect the changes made in bhkmap and will use the original file values.");
+                ImGui::Text("\n");
+
+                ImGui::Text("i.e.\nYou can fix a corrupted map by importing it in bhkmap, removing all larndmarks then export it with the \"Override landmarks\" option checked.");
+                ImGui::Text("\n");
+
+                ImGui::Checkbox(getFixedSizeString("Override player spawns", g_fixedTextLengthShort).c_str(), &g_map.overridePlayerSpawns);
+                ImGui::Checkbox(getFixedSizeString("Override landmarks", g_fixedTextLengthShort).c_str(), &g_map.overrideLandmarks);
+                ImGui::Text("\n");  
                 
-                ImGui::Separator();
-
-                ImGui::Text("Example:\nIn order to fix a map corrupted by adding landmarks in the official editor, you have to remove them using the \"Remove All Landmarks\" button from the \"Landmarks\" tab then select \"Modify landmarks\" and click \"Save\".");
-
-                PopTextWrapPos();
-
-                ImGui::Separator();
-
-                ImGui::Checkbox("Modify territories", &g_map.exportTerritories);
-                ImGui::Checkbox("Modify landmarks", &g_map.exportLandmarks);                
-
-                ImGui::Spacing();
-
-                if (ImGui::Button("Save"))
+                if (ImGui::Button("Export"))
                 {
                     g_map.saveHMap(g_map.path, g_currentWorkingDirectory);
                     g_saveOptionDialog = false;
@@ -515,6 +530,8 @@ int main()
 
                 if (ImGui::Button("Cancel"))
                     g_saveOptionDialog = false;
+
+                PopTextWrapPos();
 
                 ImGui::EndPopup();
             }
@@ -526,26 +543,29 @@ int main()
 
         if (g_openFileDialog)
         {
-            ImGui::OpenPopup("Open");
+            ImGui::OpenPopup("Import");
             g_openFileDialog = false;
             SetCurrentDirectory(g_myDocumentsPath.c_str());
         }
         else if (g_saveFileDialog)
         {
-            ImGui::OpenPopup("Save");
+            ImGui::OpenPopup("Export");
             g_saveFileDialog = false;
             SetCurrentDirectory(g_myDocumentsPath.c_str());
         }
 
-        if (g_fileDialog.showFileDialog("Open", ImGuiFileBrowser::DialogMode::OPEN, ImVec2(float(g_screenWidth)/2.0f, float(g_screenHeight)/2.0f), ".hmap"))
+        if (g_fileDialog.showFileDialog("Import", ImGuiFileBrowser::DialogMode::OPEN, ImVec2(float(g_screenWidth)/2.0f, float(g_screenHeight)/2.0f), ".hmap"))
         {
             SetCurrentDirectory(g_currentWorkingDirectory.c_str());
             const string newFilePath = g_fileDialog.selected_path;
             g_map.path = newFilePath;
-            g_map.loadHMap(g_map.path, g_currentWorkingDirectory);
-            resetCamera();
+            if (g_map.loadHMap(g_map.path, g_currentWorkingDirectory))
+            {
+                window.setTitle(string(title + string(" - ") + g_map.path).c_str());
+                resetCamera();
+            }
         }
-        else if (g_fileDialog.showFileDialog("Save", ImGuiFileBrowser::DialogMode::SAVE, ImVec2(float(g_screenWidth) / 2.0f, float(g_screenHeight) / 2.0f), ".hmap"))
+        else if (g_fileDialog.showFileDialog("Export", ImGuiFileBrowser::DialogMode::SAVE, ImVec2(float(g_screenWidth) / 2.0f, float(g_screenHeight) / 2.0f), ".hmap"))
         {
             SetCurrentDirectory(g_currentWorkingDirectory.c_str());
             const string newFilePath = g_fileDialog.selected_path;

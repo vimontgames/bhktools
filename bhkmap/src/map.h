@@ -4,6 +4,8 @@
 #include "resourceinfo.h"
 #include "tinyxml2.h"
 
+#define MAX_PLAYER_SPAWN 8
+
 //--------------------------------------------------------------------------------------
 enum MapBitmap
 {
@@ -78,16 +80,32 @@ struct NaturalWonder
 };
 
 //--------------------------------------------------------------------------------------
+struct SpawnPoint
+{
+    sf::Vector2u pos;
+    u32 flags = 0;
+};
+
+//--------------------------------------------------------------------------------------
+struct SpawnInfo
+{
+    bool visible = false;
+    sf::Texture texture;
+    std::vector<SpawnPoint> spawns;
+};
+
+//--------------------------------------------------------------------------------------
 struct Map
 {
     void clearTerritories();
     void clearLandmarks();
 
+    void loadIcons();
     void refresh();
-
+    
     u32 * loadTexture(tinyxml2::XMLElement * _xmlTerrainSave, const std::string & _name);
 
-    void loadHMap(const std::string & _map, const std::string & _cwd);
+    bool loadHMap(const std::string & _map, const std::string & _cwd);
     void saveHMap(std::string & _map, const std::string & _cwd);
 
     std::string path;
@@ -117,10 +135,14 @@ struct Map
     bool showStrategicResources = false;
     bool showLuxuryResources = false;
     bool showWonders = false;
+    bool showSpawnPoints = false;
 
     tinyxml2::XMLDocument xmlDocDescriptor;
     tinyxml2::XMLDocument xmlDocSave;
 
-    bool exportTerritories = false;
-    bool exportLandmarks = false;
+    bool overridePlayerSpawns = true;
+    bool overrideLandmarks = true;
+
+    SpawnInfo spawnInfo[MAX_PLAYER_SPAWN];
+    u32 spawnPlayerCountDisplayed = 0;
 };

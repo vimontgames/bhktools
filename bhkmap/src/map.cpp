@@ -32,11 +32,8 @@ Color ColorFloat4ToUbyte4(const ColorFloat4 & _color)
 }
 
 //--------------------------------------------------------------------------------------
-void Map::refresh()
+void Map::loadIcons()
 {
-    if (!loaded)
-        return;
-
     // load resource textures if needed
     for (u32 i = 0; i < (u32)StrategicResource::Count; ++i)
     {
@@ -72,6 +69,22 @@ void Map::refresh()
         bitmap.sprites.clear();
     }
 
+    for (u32 i = 0; i < _countof(spawnInfo); ++i)
+    {
+        auto & info = spawnInfo[i];
+        if (Vector2u(0, 0) == info.texture.getSize())
+            info.texture.loadFromFile("data/img/" + to_string(i + 1) + ".png");  
+    }
+}
+
+//--------------------------------------------------------------------------------------
+void Map::refresh()
+{
+    if (!loaded)
+        return;
+
+    loadIcons();
+
     Bitmap & heigthfield = bitmaps[Heightfield];
     Bitmap & territories = bitmaps[Territories];
     Bitmap & resources = bitmaps[Resources];
@@ -90,6 +103,9 @@ void Map::refresh()
 
     const Vector2f scale = Vector2f(float(g_screenWidth) / float(width), float(g_screenHeight) / float(height));
 
+    u32 curPlayerIndex[_countof(spawnInfo)];
+    memset(curPlayerIndex, 0x0, sizeof(curPlayerIndex));
+
     for (u32 h = 0; h < height; ++h)
     {
         for (u32 w = 0; w < width; ++w)
@@ -98,7 +114,8 @@ void Map::refresh()
 
             // Heightfield
             const ubyte height = elevation[offset];
-            heigthfield.image.setPixel(w, h, Color(height << 4, height << 4, height << 4, 255));
+            Color heightfieldColor = Color(0, 0, 0, 0);
+            heightfieldColor.a = height;
 
             // Zones
             const ubyte territoryIndex = zones[offset];
@@ -180,8 +197,19 @@ void Map::refresh()
             }    
 
             if (territory.ocean)
-                territoryColor.b |= TEXEL_FLAG_WATER;
+                territoryColor.b |= TEXEL_FLAG_OCEAN_TERRITORY;
+
+            switch ((TileType)tileIndex)
+            {
+                case TileType::Coastal:
+                case TileType::Ocean:
+                case TileType::Lake:
+                    territoryColor.b |= TEXEL_FLAG_WATER_TILE;
+                    heightfieldColor.b |= TEXEL_FLAG_WATER_TILE;
+                    break;
+            } 
             
+            heigthfield.image.setPixel(w, h, heightfieldColor);
             territories.image.setPixel(w, h, territoryColor);
 
             // Resource
@@ -191,7 +219,7 @@ void Map::refresh()
             const u32 resourceIndex = poiData & 0xFF;
             const u32 wonderIndex = naturalwonders[offset] & 0xFF;
 
-            float cellWidth = float(width) / scale.x;
+            float cellWidth = float(g_screenWidth) / float(width);
             Vector2f spriteOffset = Vector2f(0.0f,0.0f);
 
             if (useHexUVs)
@@ -208,6 +236,7 @@ void Map::refresh()
                         resColor = ColorFloat4ToUbyte4(wonder.color);
 
                         wonder.texture.setSmooth(true);
+                        wonder.texture.setRepeated(false);
                         Sprite resSprite;
                         resSprite.setTexture(wonder.texture);
                         resSprite.setColor(resColor);
@@ -233,6 +262,7 @@ void Map::refresh()
                         resColor = ColorFloat4ToUbyte4(luxury.color);
                    
                         luxury.texture.setSmooth(true);
+                        luxury.texture.setRepeated(false);
                         Sprite resSprite;
                         resSprite.setTexture(luxury.texture);
                         resSprite.setColor(resColor);
@@ -258,6 +288,7 @@ void Map::refresh()
                         resColor = ColorFloat4ToUbyte4(strategic.color);
 
                         strategic.texture.setSmooth(true);
+                        strategic.texture.setRepeated(false);
                         Sprite resSprite;
                         resSprite.setTexture(strategic.texture);
                         resSprite.setColor(resColor);
@@ -271,7 +302,39 @@ void Map::refresh()
                 }
             }
 
-            resources.image.setPixel(w, h, Color(0, 0, 0, 128));
+            if (showSpawnPoints)
+            {
+                for (u32 i = 0; i < _countof(spawnInfo); ++i)
+                {
+                    if (spawnPlayerCountDisplayed != i+1)
+                        continue;
+
+                    auto & spawns = spawnInfo[i].spawns;
+
+                    for (u32 j = 0; j < spawns.size(); ++j)
+                    {
+                        auto & spawn = spawns[j];
+
+                        if (spawn.flags & (1 << i) && spawn.pos.x == w && spawn.pos.y == h)
+                        {
+                            auto & texture = spawnInfo[j/*curPlayerIndex[i]*/].texture;
+
+                            texture.setSmooth(true);
+                            texture.setRepeated(false);
+                            Sprite resSprite;
+                            resSprite.setTexture(texture);
+                            resSprite.setOrigin(Vector2f(texture.getSize().x*0.5f, texture.getSize().y*0.5f));
+                            resSprite.setPosition(Vector2f((float(w) + 0.5f)*scale.x, (float(h) + 0.5f)*scale.y));
+                            resSprite.move(spriteOffset);
+                            resources.sprites.push_back(resSprite);
+
+                            curPlayerIndex[i]++;
+                        }
+                    }
+                }
+            }
+
+            resources.image.setPixel(w, h, Color(0, 0, 0, 96));
             resources.drawQuad = true;
             resources.drawSprites = true;
         }
@@ -344,7 +407,7 @@ u32 * Map::loadTexture(XMLElement * _xmlTerrainSave, const string & _name)
 }
 
 //--------------------------------------------------------------------------------------
-void Map::loadHMap(const string & _map, const string & _cwd)
+bool Map::loadHMap(const string & _map, const string & _cwd)
 {
     // unzip file contents to temp folder
     miniz_cpp::zip_file archive(_map);
@@ -403,6 +466,58 @@ void Map::loadHMap(const string & _map, const string & _cwd)
             this->poi[offset] = poi[offset];
             this->landmarks[offset] = landmarks[offset];
             this->naturalwonders[offset] = naturalwonders[offset];
+        }
+    }
+
+    // load spawn points
+    {
+        XMLElement * xmlEntitiesProvider = xmlTerrainSave->FirstChildElement("EntitiesProvider");
+        XMLElement * xmlSpawnPoints = xmlEntitiesProvider->FirstChildElement("SpawnPoints");
+
+        u32 spawnPointCount = 0;
+        xmlErr = xmlSpawnPoints->QueryUnsignedAttribute("Length", &spawnPointCount);
+
+        std::vector<SpawnPoint> spawnPoints;
+        spawnPoints.reserve(spawnPointCount);
+
+        XMLNode * xmlSpawnNode = xmlSpawnPoints->FirstChildElement("Item");
+
+        if (xmlSpawnNode)
+        {
+            XMLElement * xmlSpawn = xmlSpawnNode->ToElement();
+            while (xmlSpawn)
+            {
+                SpawnPoint spawn;
+
+                xmlErr = xmlSpawn->FirstChildElement("SpawnPoints")->FirstChildElement("Column")->ToElement()->QueryUnsignedText(&spawn.pos.x);
+                xmlErr = xmlSpawn->FirstChildElement("SpawnPoints")->FirstChildElement("Row")->ToElement()->QueryUnsignedText(&spawn.pos.y);
+
+                spawn.pos.y = height - spawn.pos.y - 1;
+
+                xmlErr = xmlSpawn->FirstChildElement("Flags")->ToElement()->QueryUnsignedText(&spawn.flags);
+
+                spawnPoints.push_back(spawn);
+
+                xmlSpawn = xmlSpawn->NextSiblingElement("Item");
+            }
+        } 
+
+        // preprocess spawns
+        for (u32 i = 0; i < _countof(spawnInfo); ++i)
+        {
+            SpawnInfo & info = spawnInfo[i];
+            info.spawns.clear();
+
+            auto & allSpawns = spawnPoints;
+            for (u32 j = 0; j < allSpawns.size(); ++j)
+            {
+                SpawnPoint & spawn = allSpawns[j];
+                if ((1 << i) & spawn.flags)
+                {
+                    spawnPlayerCountDisplayed = i+1;
+                    info.spawns.push_back(spawn);
+                }
+            }
         }
     }
 
@@ -517,6 +632,8 @@ void Map::loadHMap(const string & _map, const string & _cwd)
     loaded = true;
 
     refresh();
+
+    return true;
 }
 
 //--------------------------------------------------------------------------------------
@@ -534,7 +651,7 @@ void Map::saveHMap(string & _map, const string & _cwd)
     XMLElement * xmlDoc = xmlDocSave.FirstChildElement("Document");
     XMLElement * xmlTerrainSave = xmlDoc->FirstChildElement("TerrainSave");
 
-    if (exportLandmarks)
+    if (overrideLandmarks)
     {
         XMLNode * xmlLandmarkDatabase = xmlTerrainSave->FirstChildElement("LandmarkDatabase");
 

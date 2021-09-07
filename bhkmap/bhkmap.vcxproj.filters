@@ -91,6 +91,30 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />
+    <None Include="..\data\shader\default_ps.fx">
+      <Filter>data\shader</Filter>
+    </None>
+    <None Include="..\data\shader\default_vs.fx">
+      <Filter>data\shader</Filter>
+    </None>
+    <None Include="..\data\shader\heightfield_ps.fx">
+      <Filter>data\shader</Filter>
+    </None>
+    <None Include="..\data\shader\heightfield_vs.fx">
+      <Filter>data\shader</Filter>
+    </None>
+    <None Include="..\data\shader\resources_ps.fx">
+      <Filter>data\shader</Filter>
+    </None>
+    <None Include="..\data\shader\resources_vs.fx">
+      <Filter>data\shader</Filter>
+    </None>
+    <None Include="..\data\shader\territories_ps.fx">
+      <Filter>data\shader</Filter>
+    </None>
+    <None Include="..\data\shader\territories_vs.fx">
+      <Filter>data\shader</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\extern\miniz-cpp\zip_file.hpp">
@@ -138,31 +162,5 @@
     <ClInclude Include="..\data\shader\hlsl2glsl.h">
       <Filter>data\shader\Shared</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="..\data\shader\default_ps.fx">
-      <Filter>data\shader</Filter>
-    </FxCompile>
-    <FxCompile Include="..\data\shader\default_vs.fx">
-      <Filter>data\shader</Filter>
-    </FxCompile>
-    <FxCompile Include="..\data\shader\resources_ps.fx">
-      <Filter>data\shader</Filter>
-    </FxCompile>
-    <FxCompile Include="..\data\shader\resources_vs.fx">
-      <Filter>data\shader</Filter>
-    </FxCompile>
-    <FxCompile Include="..\data\shader\territories_ps.fx">
-      <Filter>data\shader</Filter>
-    </FxCompile>
-    <FxCompile Include="..\data\shader\territories_vs.fx">
-      <Filter>data\shader</Filter>
-    </FxCompile>
-    <FxCompile Include="..\data\shader\heightfield_ps.fx">
-      <Filter>data\shader</Filter>
-    </FxCompile>
-    <FxCompile Include="..\data\shader\heightfield_vs.fx">
-      <Filter>data\shader</Filter>
-    </FxCompile>
   </ItemGroup>
 </Project>

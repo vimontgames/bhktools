@@ -18,8 +18,8 @@ void main()
 
     bool edge = (0 != (PASS_FLAG_BORDERS & passFlags)) && ((left.a != center.a) || (right.a != center.a) || (bottom.a != center.a) || (up.a != center.a) || (topLeft.a != center.a) || (topRight.a != center.a) || (bottomLeft.a != center.a) || (bottomRight.a != center.a));
    
-    float territoryOpacity = 0.5f;
-    float edgeOpacity = 0.75f;
+    float territoryOpacity = 0.4f;
+    float edgeOpacity = 0.6f;
 
     float3 territoryColor[6] =
     {
@@ -116,13 +116,17 @@ void main()
     float3 edgeColor = float3(1, 1, 1);
     
     bool visible = 0 != (flags & TEXEL_FLAG_VISIBLE);
-    bool water = 0 != (flags & TEXEL_FLAG_WATER);
+    bool water = 0 != (flags & TEXEL_FLAG_OCEAN_TERRITORY);
     
-    if (water && PASS_TYPE_TILE != passIndex)
+    if (water)
     {
-        color = lerp(color, float3(0, 0, 1), 0.75f);
-        edgeColor = float3(0, 0, 1);
+        if (PASS_TYPE_TILE != passIndex)
+            color = lerp(color, float3(0, 0, 1), 1);
+
+        edgeColor = color * 1.5f;
     }
+    else
+        edgeColor = color * 2;
 
     gl_FragColor.rgba = edge ? float4(edgeColor, edgeOpacity) : float4(color, territoryOpacity);
 
