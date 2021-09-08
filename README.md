@@ -14,6 +14,15 @@ SFML=G:\SFML\SFML-2.5.1
 
 # Changelog
 
+v0.4
+-----
+* Export player spawn locations
+* Randomize player spawn order
+
+![ScreenShot040a](doc/img/screen040a.png?raw=true "Screenshot040a")
+
+![ScreenShot040b](doc/img/screen040b.png?raw=true "Screenshot040b")
+
 v0.33
 -----
 * Export "UseMapCycling"

@@ -41,6 +41,12 @@
     <Filter Include="data\shader\Shared">
       <UniqueIdentifier>{64ff588c-7c37-46ad-954b-c9568fc217a0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\map">
+      <UniqueIdentifier>{2192542d-4a60-4f39-8d07-c2d29e6f4e55}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="extern\imgui-bitfield">
+      <UniqueIdentifier>{57937d9b-227b-4da5-8386-5f04b6580d52}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -70,9 +76,6 @@
     <ClCompile Include="..\extern\tinyxml2\tinyxml2.cpp">
       <Filter>extern\TinyXML-2</Filter>
     </ClCompile>
-    <ClCompile Include="src\map.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\resourceinfo.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -87,6 +90,9 @@
     </ClCompile>
     <ClCompile Include="src\shadermanager.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\map\map.cpp">
+      <Filter>src\map</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -126,9 +132,6 @@
     <ClInclude Include="..\extern\stb\stb_image.h">
       <Filter>extern\stb</Filter>
     </ClInclude>
-    <ClInclude Include="src\map.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="src\maths.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -161,6 +164,24 @@
     </ClInclude>
     <ClInclude Include="..\data\shader\hlsl2glsl.h">
       <Filter>data\shader\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="src\map\map.h">
+      <Filter>src\map</Filter>
+    </ClInclude>
+    <ClInclude Include="src\map\map_export.hpp">
+      <Filter>src\map</Filter>
+    </ClInclude>
+    <ClInclude Include="src\map\map_import.hpp">
+      <Filter>src\map</Filter>
+    </ClInclude>
+    <ClInclude Include="src\map\map_refresh.hpp">
+      <Filter>src\map</Filter>
+    </ClInclude>
+    <ClInclude Include="src\map\map_actions.hpp">
+      <Filter>src\map</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\imgui-Bitfield\ImGuiBitfield.hpp">
+      <Filter>extern\imgui-bitfield</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "maths.h"
+
 //--------------------------------------------------------------------------------------
 struct ColorFloat4
 {
@@ -14,4 +16,15 @@ struct ColorFloat4
         struct { float r, g, b, a; };
         float rgba[4];
     };
+
+    inline sf::Color toColor() const
+    {
+        return sf::Color
+        (
+            ubyte(saturate(r) * 255.0f + 0.5f),
+            ubyte(saturate(g) * 255.0f + 0.5f),
+            ubyte(saturate(b) * 255.0f + 0.5f),
+            ubyte(saturate(a) * 255.0f + 0.5f)
+        );
+    }
 };

@@ -5,7 +5,7 @@
 #include "stringconvert.h"
 #include "guistyle.h"
 #include "resourceinfo.h"
-#include "map.h"
+#include "map/map.h"
 
 #include "shader/common.h"
 
@@ -34,6 +34,7 @@ bool g_openDisplayWindow = true;
 bool g_openInfoWindow = true;
 bool g_openTerritoriesWindow = true;
 bool g_openLandmarksWindow = true;
+bool g_openSpawnsWindow = true;
 bool g_openWondersWindow = true;
 bool g_openDebugWindow = false;
 
@@ -84,11 +85,17 @@ public:
 };
 dbg_stream_for_cout g_DebugStreamFor_cout;
 
-const char * title = "bhkmap 0.33";
+#include "imgui_internal.h"
+
+
+const char * title = "bhkmap 0.4";
 
 //--------------------------------------------------------------------------------------
 int main() 
 {
+    // init random seed
+    srand((u32)time(NULL));
+
     // Redirect SFML errors to debug output
     std::cout.rdbuf(&g_DebugStreamFor_cout);
     std::streambuf* previous = sf::err().rdbuf(&g_DebugStreamFor_cout);
@@ -205,6 +212,9 @@ int main()
 
                 if (ImGui::MenuItem("Landmarks", nullptr, g_openLandmarksWindow))
                     g_openLandmarksWindow ^= 1;
+
+                if (ImGui::MenuItem("Landmarks", nullptr, g_openSpawnsWindow))
+                    g_openSpawnsWindow ^= 1;
 
                 if (ImGui::MenuItem("Territories", nullptr, g_openTerritoriesWindow))
                     g_openTerritoriesWindow ^= 1;
@@ -382,6 +392,53 @@ int main()
             ImGui::End();
         }
 
+        if (g_openSpawnsWindow)
+        {
+            if (Begin("Spawns", &g_openSpawnsWindow))
+            {
+                if (ImGui::Button("Randomize order"))
+                    g_map.randomizeSpawnOrder();
+
+                for (u32 i = 0; i < g_map.allSpawnsPoints.size(); ++i)
+                {
+                    if (TreeNodeEx(to_string(i).c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+                    {
+                        PushItemWidth(g_comboxItemWidth);
+
+                        SpawnPoint & spawn = g_map.allSpawnsPoints[i];
+
+                        needRefresh |= ImGui::InputInt2("Position", (int*)&spawn.pos);
+                        
+                        if (BeginCombo("Flags", to_string(spawn.flags).c_str()))
+                        {
+                            bool selectedFlags[_countof(g_map.spawnInfo)];
+                            for (u32 b = 0; b < _countof(g_map.spawnInfo); ++b)
+                            {
+                                if (spawn.flags & (1 << b))
+                                    selectedFlags[b] = true;
+                                else
+                                    selectedFlags[b] = false;
+
+                                needRefresh |= ImGui::Checkbox( (to_string(b + 1) + " player" + string(b ? "s" : "")).c_str(), &selectedFlags[b]);
+
+                                if (selectedFlags[b])
+                                    spawn.flags |= 1 << b;
+                                else
+                                    spawn.flags &= ~(1 << b);
+                            }
+
+                            EndCombo();
+                        }
+
+                        PopItemWidth();
+
+                        TreePop();
+                    }
+                }
+            }
+            ImGui::End();
+        }
+
         if (g_openLandmarksWindow)
         {
             if (Begin("Landmarks", &g_openLandmarksWindow))
@@ -494,7 +551,16 @@ int main()
                             {
                                 needRefresh |= ImGui::RadioButton(getFixedSizeString(to_string(i + 1) + " player" + string(i ? "s" : ""), g_fixedTextLengthLarge).c_str(), (int*)&g_map.spawnPlayerCountDisplayed, int(i + 1));
                                 SameLine();
-                                ImGui::Text( "%u/%u", g_map.spawnInfo[i].spawns.size(), i + 1);
+
+                                u32 count = 0;
+                                for (u32 j = 0; j < g_map.allSpawnsPoints.size(); ++j)
+                                {
+                                    const SpawnPoint & spawn = g_map.allSpawnsPoints[j];
+                                    if (spawn.flags & (1 << i))
+                                        count++;
+                                }
+
+                                ImGui::Text( "%u/%u", count, i + 1);
                             }
                         }
                         ImGui::Unindent();
@@ -529,7 +595,7 @@ int main()
                 
                 if (ImGui::Button("Export"))
                 {
-                    g_map.saveHMap(g_map.path, g_currentWorkingDirectory);
+                    g_map.exportHMAP(g_map.path, g_currentWorkingDirectory);
                     g_saveOptionDialog = false;
                 }
 
@@ -566,7 +632,7 @@ int main()
             SetCurrentDirectory(g_currentWorkingDirectory.c_str());
             const string newFilePath = g_fileDialog.selected_path;
             g_map.path = newFilePath;
-            if (g_map.loadHMap(g_map.path, g_currentWorkingDirectory))
+            if (g_map.importHMAP(g_map.path, g_currentWorkingDirectory))
             {
                 window.setTitle(string(title + string(" - ") + g_map.path).c_str());
                 resetCamera();

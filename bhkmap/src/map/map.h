@@ -83,7 +83,8 @@ struct NaturalWonder
 struct SpawnPoint
 {
     sf::Vector2u pos;
-    u32 flags = 0;
+    u32 flags = (u32)-1;
+    u32 fileIndex = (u32)-1;
 };
 
 //--------------------------------------------------------------------------------------
@@ -91,23 +92,28 @@ struct SpawnInfo
 {
     bool visible = false;
     sf::Texture texture;
-    std::vector<SpawnPoint> spawns;
 };
 
 //--------------------------------------------------------------------------------------
 struct Map
 {
+public:
+    bool importHMAP(const std::string & _map, const std::string & _cwd);
+    void exportHMAP(std::string & _map, const std::string & _cwd);
+
+    void randomizeSpawnOrder(); 
+    void computeSpawnOrder();
     void clearTerritories();
     void clearLandmarks();
 
     void loadIcons();
+
     void refresh();
     
+private:
     u32 * loadTexture(tinyxml2::XMLElement * _xmlTerrainSave, const std::string & _name);
-
-    bool loadHMap(const std::string & _map, const std::string & _cwd);
-    void saveHMap(std::string & _map, const std::string & _cwd);
-
+        
+public:
     std::string path;
     std::string author;
 
@@ -147,6 +153,7 @@ struct Map
     bool overridePlayerSpawns = true;
     bool overrideLandmarks = true;
 
-    SpawnInfo spawnInfo[MAX_PLAYER_SPAWN];
     u32 spawnPlayerCountDisplayed = 0;
+    SpawnInfo spawnInfo[MAX_PLAYER_SPAWN];
+    std::vector<SpawnPoint> allSpawnsPoints;
 };

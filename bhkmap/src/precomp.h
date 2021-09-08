@@ -6,6 +6,8 @@
 #include <assert.h>
 #include <iostream>
 #include <sstream>
+#include <time.h>
+#include <stdlib.h> 
 
 #include <SFML/System/Clock.hpp>
 #include <SFML/System/Err.hpp>
