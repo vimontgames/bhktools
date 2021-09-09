@@ -14,6 +14,10 @@ SFML=G:\SFML\SFML-2.5.1
 
 # Changelog
 
+v0.41
+-----
+* Fix corrupted zip file export
+
 v0.4
 -----
 * Export player spawn locations
