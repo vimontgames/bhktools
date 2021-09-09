@@ -405,7 +405,7 @@ int main()
 
                     if (spawn.flags & (1 << (g_map.spawnPlayerCountDisplayed-1)))
                     {
-                        if (TreeNodeEx(("#" + to_string(i) + " - Player " + to_string(spawn.index[g_map.spawnPlayerCountDisplayed - 1]+1)).c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+                        if (TreeNodeEx(("Player " + to_string(spawn.index[g_map.spawnPlayerCountDisplayed - 1]+1)).c_str(), ImGuiTreeNodeFlags_DefaultOpen))
                         {
                             PushItemWidth(g_comboxItemWidth);
 
