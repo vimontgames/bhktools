@@ -35,6 +35,7 @@ bool Map::importHMAP(const string & _map, const string & _cwd)
     // load descriptor
     string xmlDescriptorFilename = tempFolder + "Descriptor.hmd";
     xmlErr = xmlDocDescriptor.LoadFile(xmlDescriptorFilename.c_str());
+    assert(XML_SUCCESS == xmlErr);
 
     // load xml
     string xmlSaveFilename = tempFolder + "Save.hms";
@@ -239,8 +240,6 @@ bool Map::importHMAP(const string & _map, const string & _cwd)
     }
 
     loaded = true;
-
-    refresh();
 
     return true;
 }

@@ -89,8 +89,10 @@ void Map::exportHMAP(string & _map, const string & _cwd)
     tempFolder = _cwd + "\\tmp\\zip\\write\\";
     created = CreateDirectory(tempFolder.c_str(), nullptr);
 
-    string xmlDescriptorFilename = tempFolder + "Descriptor.hmd";
-    string xmlSaveFilename = tempFolder + "Save.hms";
+    SetCurrentDirectory(tempFolder.c_str());
+
+    string xmlDescriptorFilename = "Descriptor.hmd";
+    string xmlSaveFilename = "Save.hms";
 
     xmlDocDescriptor.SaveFile((xmlDescriptorFilename).c_str());
     xmlDocSave.SaveFile((xmlSaveFilename).c_str());

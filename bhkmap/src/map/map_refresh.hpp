@@ -233,7 +233,7 @@ void Map::refresh()
 
                         if (spawn.flags & (1 << i) && spawn.pos.x == w && spawn.pos.y == h)
                         {
-                            auto & texture = spawnInfo[spawn.fileIndex].texture;
+                            auto & texture = spawnInfo[spawn.index[i]].texture;
 
                             texture.setSmooth(true);
                             texture.setRepeated(false);

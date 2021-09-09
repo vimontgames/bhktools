@@ -88,7 +88,7 @@ dbg_stream_for_cout g_DebugStreamFor_cout;
 #include "imgui_internal.h"
 
 
-const char * title = "bhkmap 0.4";
+const char * title = "bhkmap 0.41";
 
 //--------------------------------------------------------------------------------------
 int main() 
@@ -401,38 +401,41 @@ int main()
 
                 for (u32 i = 0; i < g_map.allSpawnsPoints.size(); ++i)
                 {
-                    if (TreeNodeEx(to_string(i).c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+                    SpawnPoint & spawn = g_map.allSpawnsPoints[i];
+
+                    if (spawn.flags & (1 << (g_map.spawnPlayerCountDisplayed-1)))
                     {
-                        PushItemWidth(g_comboxItemWidth);
-
-                        SpawnPoint & spawn = g_map.allSpawnsPoints[i];
-
-                        needRefresh |= ImGui::InputInt2("Position", (int*)&spawn.pos);
-                        
-                        if (BeginCombo("Flags", to_string(spawn.flags).c_str()))
+                        if (TreeNodeEx(("#" + to_string(i) + " - Player " + to_string(spawn.index[g_map.spawnPlayerCountDisplayed - 1]+1)).c_str(), ImGuiTreeNodeFlags_DefaultOpen))
                         {
-                            bool selectedFlags[_countof(g_map.spawnInfo)];
-                            for (u32 b = 0; b < _countof(g_map.spawnInfo); ++b)
+                            PushItemWidth(g_comboxItemWidth);
+
+                            needRefresh |= ImGui::InputInt2("Position", (int*)&spawn.pos);
+
+                            if (BeginCombo("Flags", to_string(spawn.flags).c_str()))
                             {
-                                if (spawn.flags & (1 << b))
-                                    selectedFlags[b] = true;
-                                else
-                                    selectedFlags[b] = false;
+                                bool selectedFlags[_countof(g_map.spawnInfo)];
+                                for (u32 b = 0; b < _countof(g_map.spawnInfo); ++b)
+                                {
+                                    if (spawn.flags & (1 << b))
+                                        selectedFlags[b] = true;
+                                    else
+                                        selectedFlags[b] = false;
 
-                                needRefresh |= ImGui::Checkbox( (to_string(b + 1) + " player" + string(b ? "s" : "")).c_str(), &selectedFlags[b]);
+                                    needRefresh |= ImGui::Checkbox((to_string(b + 1) + " player" + string(b ? "s" : "")).c_str(), &selectedFlags[b]);
 
-                                if (selectedFlags[b])
-                                    spawn.flags |= 1 << b;
-                                else
-                                    spawn.flags &= ~(1 << b);
+                                    if (selectedFlags[b])
+                                        spawn.flags |= 1 << b;
+                                    else
+                                        spawn.flags &= ~(1 << b);
+                                }
+
+                                EndCombo();
                             }
 
-                            EndCombo();
+                            PopItemWidth();
+
+                            TreePop();
                         }
-
-                        PopItemWidth();
-
-                        TreePop();
                     }
                 }
             }
@@ -629,18 +632,20 @@ int main()
 
         if (g_fileDialog.showFileDialog("Import", ImGuiFileBrowser::DialogMode::OPEN, ImVec2(float(g_screenWidth)/2.0f, float(g_screenHeight)/2.0f), ".hmap"))
         {
-            SetCurrentDirectory(g_currentWorkingDirectory.c_str());
             const string newFilePath = g_fileDialog.selected_path;
             g_map.path = newFilePath;
+            
             if (g_map.importHMAP(g_map.path, g_currentWorkingDirectory))
             {
+                SetCurrentDirectory(g_currentWorkingDirectory.c_str());
+                g_map.refresh();
+
                 window.setTitle(string(title + string(" - ") + g_map.path).c_str());
                 resetCamera();
             }
         }
         else if (g_fileDialog.showFileDialog("Export", ImGuiFileBrowser::DialogMode::SAVE, ImVec2(float(g_screenWidth) / 2.0f, float(g_screenHeight) / 2.0f), ".hmap"))
         {
-            SetCurrentDirectory(g_currentWorkingDirectory.c_str());
             const string newFilePath = g_fileDialog.selected_path;
             g_map.path = newFilePath;
             g_saveOptionDialog = true;

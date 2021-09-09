@@ -84,7 +84,7 @@ struct SpawnPoint
 {
     sf::Vector2u pos;
     u32 flags = (u32)-1;
-    u32 fileIndex = (u32)-1;
+    u32 index[MAX_PLAYER_SPAWN] = { (u32)0 };
 };
 
 //--------------------------------------------------------------------------------------

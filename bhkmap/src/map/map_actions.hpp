@@ -46,7 +46,7 @@ void Map::computeSpawnOrder()
             SpawnPoint & spawn = allSpawnsPoints[j];
             if ((1 << i) & spawn.flags)
             {
-                spawn.fileIndex = curPlayerIndex[i];
+                spawn.index[i] = curPlayerIndex[i];
                 curPlayerIndex[i]++;
             }
         }
