@@ -88,7 +88,7 @@ dbg_stream_for_cout g_DebugStreamFor_cout;
 #include "imgui_internal.h"
 
 
-const char * title = "bhkmap 0.41";
+const char * title = "bhkmap 0.42";
 
 //--------------------------------------------------------------------------------------
 int main() 

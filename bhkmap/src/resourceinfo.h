@@ -28,7 +28,7 @@ enum class StrategicResource
 
     First = Horse,
     Last = Uranium,
-    Count = Last-First
+    Count = Last - First + 1
 };
 
 //--------------------------------------------------------------------------------------
