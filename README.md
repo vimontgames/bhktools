@@ -1,8 +1,11 @@
-bhktools
+bhkmap
 =======
-Benualdo's HumanKind Tools
+Main Features
 
-- bhkmap: displays a HumanKind map .hmap file with various useful informations like resources.
+* Read/Write .hmap files
+* Display elevation level, territories, biomes, tile types, strategic resources, luxury resources, natural wonders
+* Display, randomize and edit player spawn points (including order)
+* Fix corrupted saves after adding landmarks in the map editor
 
 # Build
 Open bhktools.sln using Visual Studio 2017 or later then build solution :)
