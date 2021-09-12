@@ -134,6 +134,7 @@
     <ClInclude Include="src\map\map_export.hpp" />
     <ClInclude Include="src\map\map_import.hpp" />
     <ClInclude Include="src\map\map_refresh.hpp" />
+    <ClInclude Include="src\map\map_render.hpp" />
     <ClInclude Include="src\maths.h" />
     <ClInclude Include="src\precomp.h" />
     <ClInclude Include="src\resourceinfo.h" />

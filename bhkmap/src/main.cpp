@@ -49,7 +49,8 @@ Vector2f g_cameraPreviousOffset = Vector2f(0, 0);
 float g_cameraZoom = 1.0f;
 float g_mouseWheelDelta = 0;
 
-static Map g_map;
+static vector<Map*> g_maps;
+static Map * g_map = nullptr;
 
 //--------------------------------------------------------------------------------------
 void resetCameraPan()
@@ -88,7 +89,7 @@ dbg_stream_for_cout g_DebugStreamFor_cout;
 #include "imgui_internal.h"
 
 
-const char * title = "bhkmap 0.42";
+const char * version = "bhkmap 0.43";
 
 //--------------------------------------------------------------------------------------
 int main() 
@@ -110,7 +111,7 @@ int main()
     if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_MYDOCUMENTS, NULL, CSIDL_MYDOCUMENTS, userFolder)))
         g_myDocumentsPath = ws2s(wstring(userFolder)) + "\\Humankind\\Maps";
 
-    RenderWindow window(VideoMode(g_screenWidth, g_screenHeight), title, Style::Titlebar | Style::Resize | Style::Close);
+    RenderWindow window(VideoMode(g_screenWidth, g_screenHeight), "", Style::Titlebar | Style::Resize | Style::Close);
     window.setFramerateLimit(60);
     Init(window);
 
@@ -127,6 +128,12 @@ int main()
     Clock deltaClock;
     while (window.isOpen()) 
     {
+        string title = version;
+        if (g_map)
+            title += string(" - ") + g_map->path;
+
+        window.setTitle(title.c_str());
+
         sf::Event event;
         while (window.pollEvent(event))
         {
@@ -233,13 +240,25 @@ int main()
                 ImGui::EndMenu();
             }
 
-            //if (ImGui::BeginMenu("About"))
-            //{
-            //    if (ImGui::MenuItem("bhkmap", nullptr, g_openAboutWindow))
-            //        g_openAboutWindow ^= 1;
-            //
-            //    ImGui::EndMenu();
-            //}
+            if (ImGui::BeginMenu("Maps"))
+            {
+                if (g_maps.size())
+                {
+                    for (u32 i = 0; i < g_maps.size(); ++i)
+                    {
+                        Map * map = g_maps[i];
+
+                        if (ImGui::MenuItem(map->getShortName().c_str(), nullptr, map == g_map))
+                            g_map = map;
+                    }
+                }
+                else
+                {
+                    ImGui::TextDisabled("Empty");
+                }
+
+                ImGui::EndMenu();
+            }
 
             ImGui::EndMenuBar();
         }
@@ -334,7 +353,7 @@ int main()
 
         if (g_openInfoWindow)
         {
-            if (Begin("Infos", &g_openInfoWindow))
+            if (Begin("Infos", &g_openInfoWindow) && g_map)
             {
                 ImGui::Columns(2, "mycolumns2", false);  // 2-ways, no border
                 {
@@ -345,17 +364,17 @@ int main()
                 }
                 ImGui::NextColumn();
                 {
-                    ImGui::Text(g_map.author.c_str());
-                    ImGui::Text(to_string(g_map.width).c_str());
-                    ImGui::Text(to_string(g_map.height).c_str());
+                    ImGui::Text(g_map->author.c_str());
+                    ImGui::Text(to_string(g_map->width).c_str());
+                    ImGui::Text(to_string(g_map->height).c_str());
                 }
 
                 ImGui::Columns(1);
 
                 if (TreeNodeEx("Options", ImGuiTreeNodeFlags_DefaultOpen))
                 {
-                    ImGui::Checkbox(getFixedSizeString("Map cycling", g_fixedTextLengthShort).c_str(), &g_map.useMapCycling);
-                    ImGui::Checkbox(getFixedSizeString("Procedural mountain chains", g_fixedTextLengthShort).c_str(), &g_map.useProceduralMountainChains);
+                    ImGui::Checkbox(getFixedSizeString("Map cycling", g_fixedTextLengthShort).c_str(), &g_map->useMapCycling);
+                    ImGui::Checkbox(getFixedSizeString("Procedural mountain chains", g_fixedTextLengthShort).c_str(), &g_map->useProceduralMountainChains);
 
                     TreePop();
                 }
@@ -366,23 +385,25 @@ int main()
 
         if (g_openTerritoriesWindow)
         {
-            if (Begin("Territories", &g_openTerritoriesWindow))
+            if (Begin("Territories", &g_openTerritoriesWindow) && g_map)
             {
-                if (ImGui::Button(("Remove all territories (" + to_string(g_map.territoriesInfo.size()) + ")").c_str()))
-                    g_map.clearTerritories();
+                if (ImGui::Button(("Remove all territories (" + to_string(g_map->territoriesInfo.size()) + ")").c_str()))
+                    g_map->clearTerritories();
 
-                for (u32 i = 0; i < g_map.territoriesInfo.size(); ++i)
+                for (u32 i = 0; i < g_map->territoriesInfo.size(); ++i)
                 {
                     if (TreeNodeEx(to_string(i).c_str(), ImGuiTreeNodeFlags_DefaultOpen))
                     {
                         PushItemWidth(g_comboxItemWidth);
 
-                        auto & territory = g_map.territoriesInfo[i];
+                        auto & territory = g_map->territoriesInfo[i];
                         
                         needRefresh |= Combo("Continent", (int*)&territory.continent, "Ocean\0Continent 1\0Continent 2\0Continent 3\0Continent 4\0Continent 5\0Continent 6\0Continent 7\0\0");
                         needRefresh |= Combo("Biome", (int*)&territory.biome, "Arctic\0Badlands\0Desert\0Grassland\0Meditarranean\0Savanna\0Taiga\0Temperate\0Tropical\0Tundra\0\0");
 
+                        // should be done during refresh, not UI!
                         territory.ocean = (territory.continent == 0) ? true : false;
+
                         PopItemWidth();
 
                         TreePop();
@@ -394,18 +415,18 @@ int main()
 
         if (g_openSpawnsWindow)
         {
-            if (Begin("Spawns", &g_openSpawnsWindow))
+            if (Begin("Spawns", &g_openSpawnsWindow) && g_map)
             {
                 if (ImGui::Button("Randomize order"))
-                    g_map.randomizeSpawnOrder();
+                    g_map->randomizeSpawnOrder();
 
-                for (u32 i = 0; i < g_map.allSpawnsPoints.size(); ++i)
+                for (u32 i = 0; i < g_map->allSpawnsPoints.size(); ++i)
                 {
-                    SpawnPoint & spawn = g_map.allSpawnsPoints[i];
+                    SpawnPoint & spawn = g_map->allSpawnsPoints[i];
 
-                    if (spawn.flags & (1 << (g_map.spawnPlayerCountDisplayed-1)))
+                    if (spawn.flags & (1 << (g_map->spawnPlayerCountDisplayed-1)))
                     {
-                        if (TreeNodeEx(("Player " + to_string(spawn.index[g_map.spawnPlayerCountDisplayed - 1]+1)).c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+                        if (TreeNodeEx(("Player " + to_string(spawn.index[g_map->spawnPlayerCountDisplayed - 1]+1)).c_str(), ImGuiTreeNodeFlags_DefaultOpen))
                         {
                             PushItemWidth(g_comboxItemWidth);
 
@@ -413,8 +434,8 @@ int main()
 
                             if (BeginCombo("Flags", to_string(spawn.flags).c_str()))
                             {
-                                bool selectedFlags[_countof(g_map.spawnInfo)];
-                                for (u32 b = 0; b < _countof(g_map.spawnInfo); ++b)
+                                bool selectedFlags[_countof(g_map->spawnInfo)];
+                                for (u32 b = 0; b < _countof(g_map->spawnInfo); ++b)
                                 {
                                     if (spawn.flags & (1 << b))
                                         selectedFlags[b] = true;
@@ -444,18 +465,18 @@ int main()
 
         if (g_openLandmarksWindow)
         {
-            if (Begin("Landmarks", &g_openLandmarksWindow))
+            if (Begin("Landmarks", &g_openLandmarksWindow) && g_map)
             {
-                if (ImGui::Button( ("Remove all landmarks (" + to_string(g_map.landmarkInfo.size()) + ")").c_str()))
-                    g_map.clearLandmarks();
+                if (ImGui::Button( ("Remove all landmarks (" + to_string(g_map->landmarkInfo.size()) + ")").c_str()))
+                    g_map->clearLandmarks();
 
-                for (u32 i = 0; i < g_map.landmarkInfo.size(); ++i)
+                for (u32 i = 0; i < g_map->landmarkInfo.size(); ++i)
                 {
                     if (TreeNodeEx(to_string(i).c_str(), ImGuiTreeNodeFlags_DefaultOpen))
                     {
                         PushItemWidth(g_comboxItemWidth);
 
-                        auto & landmark = g_map.landmarkInfo[i];
+                        auto & landmark = g_map->landmarkInfo[i];
 
                         char buffer[1024];
                         sprintf_s(buffer, landmark.name.c_str());
@@ -487,21 +508,21 @@ int main()
 
         if (g_openDisplayWindow)
         {
-            if (Begin("Display", &g_openDisplayWindow))
+            if (Begin("Display", &g_openDisplayWindow) && g_map)
             {
                 if (TreeNodeEx("Map", ImGuiTreeNodeFlags_DefaultOpen))
                 {
                     PushItemWidth(g_comboxItemWidth);
-                    needRefresh |= Combo("Filter", (int*)&g_map.territoryBackground, "None\0Tile\0Territories\0Biomes\0Landmarks\0Wonders\0\0");
+                    needRefresh |= Combo("Filter", (int*)&g_map->territoryBackground, "None\0Tile\0Territories\0Biomes\0Landmarks\0Wonders\0\0");
                     PopItemWidth();
 
-                    needRefresh |= Checkbox(getFixedSizeString("Borders", g_fixedTextLengthShort).c_str(), &g_map.showTerritoriesBorders);
+                    needRefresh |= Checkbox(getFixedSizeString("Borders", g_fixedTextLengthShort).c_str(), &g_map->showTerritoriesBorders);
 
                     ImGui::SameLine();
-                    needRefresh |= Checkbox(getFixedSizeString("Hexes", g_fixedTextLengthShort).c_str(), &g_map.useHexUVs);
+                    needRefresh |= Checkbox(getFixedSizeString("Hexes", g_fixedTextLengthShort).c_str(), &g_map->useHexUVs);
 
 
-                    g_map.bitmaps[Territories].visible = g_map.territoryBackground != TerritoryBackground::None;
+                    g_map->bitmaps[Territories].visible = g_map->territoryBackground != TerritoryBackground::None;
 
                     TreePop();
                 }
@@ -531,34 +552,34 @@ int main()
                         return changed;
                     };
 
-                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Strategic", g_fixedTextLengthShort).c_str(), &g_map.showStrategicResources);
-                    if (g_map.showStrategicResources)
+                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Strategic", g_fixedTextLengthShort).c_str(), &g_map->showStrategicResources);
+                    if (g_map->showStrategicResources)
                         needRefresh |= ListResources(strategicResources, (u32)StrategicResource::First, (u32)StrategicResource::Last);
 
-                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Luxury", g_fixedTextLengthShort).c_str(), &g_map.showLuxuryResources);
-                    if (g_map.showLuxuryResources)
+                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Luxury", g_fixedTextLengthShort).c_str(), &g_map->showLuxuryResources);
+                    if (g_map->showLuxuryResources)
                         needRefresh |= ListResources(luxuryResources, (u32)LuxuryResource::First, (u32)LuxuryResource::Last);
 
-                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Wonders", g_fixedTextLengthShort).c_str(), &g_map.showWonders);
-                    if (g_map.showWonders)
+                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Wonders", g_fixedTextLengthShort).c_str(), &g_map->showWonders);
+                    if (g_map->showWonders)
                         needRefresh |= ListResources(naturalWonderResources, (u32)StrategicResource::First, (u32)StrategicResource::Last);
 
-                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Spawns", g_fixedTextLengthShort).c_str(), &g_map.showSpawnPoints);
-                    if (g_map.showSpawnPoints)
+                    needRefresh |= ImGui::Checkbox(getFixedSizeString("Spawns", g_fixedTextLengthShort).c_str(), &g_map->showSpawnPoints);
+                    if (g_map->showSpawnPoints)
                     {
                         PushItemWidth(g_comboxItemWidth);
 
                         ImGui::Indent();
                         {
-                            for (u32 i = 0; i < _countof(g_map.spawnInfo); ++i)
+                            for (u32 i = 0; i < _countof(g_map->spawnInfo); ++i)
                             {
-                                needRefresh |= ImGui::RadioButton(getFixedSizeString(to_string(i + 1) + " player" + string(i ? "s" : ""), g_fixedTextLengthLarge).c_str(), (int*)&g_map.spawnPlayerCountDisplayed, int(i + 1));
+                                needRefresh |= ImGui::RadioButton(getFixedSizeString(to_string(i + 1) + " player" + string(i ? "s" : ""), g_fixedTextLengthLarge).c_str(), (int*)&g_map->spawnPlayerCountDisplayed, int(i + 1));
                                 SameLine();
 
                                 u32 count = 0;
-                                for (u32 j = 0; j < g_map.allSpawnsPoints.size(); ++j)
+                                for (u32 j = 0; j < g_map->allSpawnsPoints.size(); ++j)
                                 {
-                                    const SpawnPoint & spawn = g_map.allSpawnsPoints[j];
+                                    const SpawnPoint & spawn = g_map->allSpawnsPoints[j];
                                     if (spawn.flags & (1 << i))
                                         count++;
                                 }
@@ -571,14 +592,22 @@ int main()
                         PopItemWidth();
                     }
 
-
-                    g_map.bitmaps[Resources].visible = g_map.showStrategicResources || g_map.showLuxuryResources || g_map.showWonders || g_map.showSpawnPoints;
+                    g_map->bitmaps[Resources].visible = g_map->showStrategicResources || g_map->showLuxuryResources || g_map->showWonders || g_map->showSpawnPoints;
 
                     ImGui::TreePop();
                 }
             }
             ImGui::End();
         }
+
+        //if (1)
+        //{
+        //    if (Begin("Map", nullptr, ImGuiWindowFlags_HorizontalScrollbar))
+        //    {
+        //        ImGui::Image(renderTexture);
+        //    }
+        //    ImGui::End();
+        //}
 
         if (g_saveOptionDialog)
         {
@@ -591,14 +620,14 @@ int main()
                 ImGui::Text("Unselected categories will not export the changes made in bhkmap and will keep their original values.");
                 ImGui::Text("\n");
 
-                ImGui::Checkbox(getFixedSizeString("Infos", g_fixedTextLengthShort).c_str(), &g_map.overrideMapOptions);
-                ImGui::Checkbox(getFixedSizeString("Spawns", g_fixedTextLengthShort).c_str(), &g_map.overridePlayerSpawns);
-                ImGui::Checkbox(getFixedSizeString("Landmarks", g_fixedTextLengthShort).c_str(), &g_map.overrideLandmarks);
+                ImGui::Checkbox(getFixedSizeString("Infos", g_fixedTextLengthShort).c_str(), &g_map->overrideMapOptions);
+                ImGui::Checkbox(getFixedSizeString("Spawns", g_fixedTextLengthShort).c_str(), &g_map->overridePlayerSpawns);
+                ImGui::Checkbox(getFixedSizeString("Landmarks", g_fixedTextLengthShort).c_str(), &g_map->overrideLandmarks);
                 ImGui::Text("\n");  
                 
                 if (ImGui::Button("Export"))
                 {
-                    g_map.exportHMAP(g_map.path, g_currentWorkingDirectory);
+                    g_map->exportHMAP(g_map->path, g_currentWorkingDirectory);
                     g_saveOptionDialog = false;
                 }
 
@@ -633,26 +662,53 @@ int main()
         if (g_fileDialog.showFileDialog("Import", ImGuiFileBrowser::DialogMode::OPEN, ImVec2(float(g_screenWidth)/2.0f, float(g_screenHeight)/2.0f), ".hmap"))
         {
             const string newFilePath = g_fileDialog.selected_path;
-            g_map.path = newFilePath;
+
+            // Create new map
+            Map * newMap = new Map();
+            newMap->path = newFilePath;
             
-            if (g_map.importHMAP(g_map.path, g_currentWorkingDirectory))
+            // Import it
+            if (newMap->importHMAP(newMap->path, g_currentWorkingDirectory))
             {
                 SetCurrentDirectory(g_currentWorkingDirectory.c_str());
-                g_map.refresh();
-
-                window.setTitle(string(title + string(" - ") + g_map.path).c_str());
+                newMap->refresh();
+                
                 resetCamera();
+
+                // Is the map already loaded?
+                u32 mapIndex = u32(-1);
+                for (u32 i = 0; i < g_maps.size(); ++i)
+                {
+                    if (g_maps[i]->path == newFilePath)
+                    {
+                        mapIndex = i;
+                        break;
+                    }
+                }
+
+                if (u32(-1) == mapIndex)
+                {
+                    g_maps.push_back(newMap);
+                }
+                else
+                {
+                    SAFE_DELETE(g_maps[mapIndex]);
+                    g_maps[mapIndex] = newMap;
+                }    
+
+                // This is the new current edited map
+                g_map = newMap;
             }
         }
         else if (g_fileDialog.showFileDialog("Export", ImGuiFileBrowser::DialogMode::SAVE, ImVec2(float(g_screenWidth) / 2.0f, float(g_screenHeight) / 2.0f), ".hmap"))
         {
             const string newFilePath = g_fileDialog.selected_path;
-            g_map.path = newFilePath;
+            g_map->path = newFilePath;
             g_saveOptionDialog = true;
         }
 
         if (needRefresh)
-            g_map.refresh();
+            g_map->refresh();
 
         // update "camera"
         const float panSpeed = 1.0f;
@@ -689,116 +745,24 @@ int main()
             g_mouseWheelDelta = 0;
         }
 
-        window.clear();
-
-        sf::View view;
-        view.setCenter(sf::Vector2f(g_screenWidth*0.5f, g_screenHeight*0.5f));
-        view.setSize(sf::Vector2f((float)g_screenWidth, (float)g_screenHeight));
-        view.zoom(g_cameraZoom); // zeng
-
-        view.move(g_cameraOffset);
-
-        window.setView(view);
-
-        for (u32 i = 0; i < MapBitmap::Count; ++i)
-        {
-            auto & bitmap = g_map.bitmaps[i];
-            if (bitmap.visible)
-            {
-                if (bitmap.drawQuad)
-                {
-                    auto & texture = bitmap.texture;
-                    texture.setRepeated(true);
-                    
-                    auto & sprite = bitmap.sprite;
-                    
-                    sf::Shader * shader = ShaderManager::get(bitmap.quadshader);
-                    
-                    RenderStates rs;
-                    rs.shader = shader;
-                    rs.blendMode = bitmap.quadblend;
-                    
-                    if (shader)
-                    {
-                        shader->setUniform("texSize", (Vector2f)texture.getSize());
-                        shader->setUniform("screenSize", Vector2f(float(g_screenWidth), float(g_screenHeight)));
-
-                        int passFlags = 0;
-
-                        switch (g_map.territoryBackground)
-                        {
-                            default:
-                            case TerritoryBackground::None:
-                            break;
-
-                            case TerritoryBackground::Tile:
-                                passFlags = PASS_TYPE_TILE;
-                                break;
-
-                            case TerritoryBackground::Territory:
-                                passFlags = PASS_TYPE_TERRITORY;
-                            break;
-
-                            case TerritoryBackground::Biome:
-                                passFlags = PASS_TYPE_BIOME;
-                            break;
-
-                            case TerritoryBackground::Landmarks:
-                                passFlags = PASS_TYPE_LANDMARK;
-                            break;
-
-                            case TerritoryBackground::Wonders:
-                                passFlags = PASS_TYPE_WONDER;
-                            break;
-                        }
-
-                        if (g_map.useHexUVs)
-                            passFlags |= PASS_FLAG_HEXES;
-
-                        if (g_map.showTerritoriesBorders)
-                            passFlags |= PASS_FLAG_BORDERS;
-
-                        shader->setUniform("passFlags", passFlags);
-                    }
-                    
-                    window.draw(sprite, rs);
-                }
-
-                if (bitmap.drawSprites)
-                {
-                    sf::Shader * shader = ShaderManager::get(bitmap.spriteshader);
-
-                    RenderStates rs;
-                    rs.shader = shader;
-                    rs.blendMode = bitmap.spriteblend;
-
-                    for (u32 j = 0; j < bitmap.sprites.size(); ++j)
-                    {
-                        Sprite & sprite = bitmap.sprites[j];
-
-                        if (shader)
-                        {
-                            shader->setUniform("texSize", (Vector2f)sprite.getTexture()->getSize());
-                            shader->setUniform("screenSize", Vector2f(float(g_screenWidth), float(g_screenHeight)));
-
-                            auto color = Glsl::Vec4(sprite.getColor());
-                            shader->setUniform("color", color);
-                        }
-
-                        window.draw(sprite, rs);
-                    }
-                }
-            }
-        }
-
-        Render(window);
-        window.display();
-
         if (sf::Keyboard::isKeyPressed(Keyboard::F6))
         {
             SetCurrentDirectory(g_currentWorkingDirectory.c_str());
             ShaderManager::update();
         }
+
+        // Clear backbuffer
+        window.clear();
+
+        // Render map
+        if (g_map)
+            g_map->render(window);
+
+        // Render UI
+        Render(window);
+
+        // Present backbuffer
+        window.display();
     }
 
     ShaderManager::deinit();

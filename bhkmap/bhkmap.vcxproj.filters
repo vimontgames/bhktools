@@ -183,5 +183,8 @@
     <ClInclude Include="..\extern\imgui-Bitfield\ImGuiBitfield.hpp">
       <Filter>extern\imgui-bitfield</Filter>
     </ClInclude>
+    <ClInclude Include="src\map\map_render.hpp">
+      <Filter>src\map</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

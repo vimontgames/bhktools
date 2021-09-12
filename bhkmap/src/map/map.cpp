@@ -23,6 +23,7 @@ using namespace tinyxml2;
 #include "map_export.hpp"
 #include "map_refresh.hpp"
 #include "map_actions.hpp"
+#include "map_render.hpp"
 
 //--------------------------------------------------------------------------------------
 void Map::loadIcons()
@@ -68,4 +69,20 @@ void Map::loadIcons()
         if (Vector2u(0, 0) == info.texture.getSize())
             info.texture.loadFromFile("data/img/" + to_string(i + 1) + ".png");  
     }
+}
+
+//--------------------------------------------------------------------------------------
+string Map::getShortName() const
+{
+    string shortName = path;
+
+    auto path = shortName.find_last_of("/\\");
+    if (path != string::npos)
+        shortName.erase(0, path + 1);
+
+    const size_t ext = shortName.rfind('.');
+    if (ext != string::npos)
+        shortName.erase(ext);
+
+    return shortName;
 }

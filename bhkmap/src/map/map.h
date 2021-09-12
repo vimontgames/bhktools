@@ -98,18 +98,28 @@ struct SpawnInfo
 struct Map
 {
 public:
+    // map_import.hpp
     bool importHMAP(const std::string & _map, const std::string & _cwd);
+
+    // map_export.hpp
     void exportHMAP(std::string & _map, const std::string & _cwd);
 
+    // map_actions.hpp
     void randomizeSpawnOrder(); 
     void computeSpawnOrder();
     void clearTerritories();
     void clearLandmarks();
 
-    void loadIcons();
-
+    // map_refresh.hpp
     void refresh();
-    
+
+    // map_render.hpp
+    void render(sf::RenderWindow & _window);
+
+    // misc
+    void loadIcons();
+    std::string getShortName() const;
+
 private:
     u32 * loadTexture(tinyxml2::XMLElement * _xmlTerrainSave, const std::string & _name);
         
@@ -156,4 +166,6 @@ public:
     u32 spawnPlayerCountDisplayed = 0;
     SpawnInfo spawnInfo[MAX_PLAYER_SPAWN];
     std::vector<SpawnPoint> allSpawnsPoints;
+
+    sf::RenderTexture renderTexture;
 };
