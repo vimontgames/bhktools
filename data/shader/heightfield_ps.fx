@@ -14,4 +14,6 @@ void main()
         gl_FragColor.rgba = float4(float3(0.5,0.5,2) * greyscale.xxx,1);// float4(0, 0, height.x, 1.0f);
     else
         gl_FragColor.rgba = float4(greyscale.xxx, 1);// float4(height.xxx, 1.0f);
+
+    //gl_FragColor.rgba = float4(0, 0, 0, 1);
 }

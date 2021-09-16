@@ -41,36 +41,8 @@ bool g_openDebugWindow = false;
 bool g_openHelpWindow = true;
 bool g_openAboutWindow = false;
 
-// camera
-bool g_cameraPan = false;
-Vector2f g_cameraPanOrigin;
-Vector2f g_cameraOffset = Vector2f(0, 0);
-Vector2f g_cameraPreviousOffset = Vector2f(0, 0);
-float g_cameraZoom = 1.0f;
-float g_mouseWheelDelta = 0;
-
 static vector<Map*> g_maps;
 static Map * g_map = nullptr;
-
-//--------------------------------------------------------------------------------------
-void resetCameraPan()
-{
-    g_cameraOffset = Vector2f(0, 0);
-    g_cameraPreviousOffset = g_cameraOffset;
-}
-
-//--------------------------------------------------------------------------------------
-void resetCameraZoom()
-{
-    g_cameraZoom = 1.0f;
-}
-
-//--------------------------------------------------------------------------------------
-void resetCamera()
-{
-    resetCameraPan();
-    resetCameraZoom();
-}
 
 //--------------------------------------------------------------------------------------
 class dbg_stream_for_cout : public std::stringbuf
@@ -88,8 +60,7 @@ dbg_stream_for_cout g_DebugStreamFor_cout;
 
 #include "imgui_internal.h"
 
-
-const char * version = "bhkmap 0.43";
+const char * version = "bhkmap 0.5";
 
 //--------------------------------------------------------------------------------------
 int main() 
@@ -111,7 +82,10 @@ int main()
     if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_MYDOCUMENTS, NULL, CSIDL_MYDOCUMENTS, userFolder)))
         g_myDocumentsPath = ws2s(wstring(userFolder)) + "\\Humankind\\Maps";
 
-    RenderWindow window(VideoMode(g_screenWidth, g_screenHeight), "", Style::Titlebar | Style::Resize | Style::Close);
+    sf::ContextSettings contextSettings;
+                        contextSettings.sRgbCapable = false;
+
+    RenderWindow window(VideoMode(g_screenWidth, g_screenHeight), "", Style::Titlebar | Style::Resize | Style::Close, contextSettings);
     window.setFramerateLimit(60);
     Init(window);
 
@@ -154,20 +128,23 @@ int main()
                     break;
 
                 case Event::MouseWheelMoved:
-                    if (!IsWindowHovered(ImGuiHoveredFlags_AnyWindow) && !IsWindowFocused(ImGuiHoveredFlags_AnyWindow) && g_hasFocus)
-                        g_mouseWheelDelta = (float)event.mouseWheel.delta;
+                    if (g_map)
+                        g_map->mouseWheelDelta = (float)event.mouseWheel.delta;
                     break;
 
                 case Event::Resized:
                 {
-                    Vector2f offset = Vector2f(float(g_screenWidth / 2) - float(event.size.width / 2), float(g_screenHeight / 2) - float(event.size.height / 2));
-                    g_cameraOffset += offset;
-                    g_cameraPreviousOffset += offset;
+                    if (g_map)
+                    {
+                        Vector2f offset = Vector2f(float(g_screenWidth / 2) - float(event.size.width / 2), float(g_screenHeight / 2) - float(event.size.height / 2));
 
-                    g_cameraZoom = g_cameraZoom / (float(event.size.height) / float(g_screenHeight));
+                        g_map->cameraOffset += offset;
+                        g_map->cameraPreviousOffset += offset;
+                        g_map->cameraZoom = g_map->cameraZoom / (float(event.size.height) / float(g_screenHeight));
 
-                    g_screenWidth = event.size.width;
-                    g_screenHeight = event.size.height;
+                        g_screenWidth = event.size.width;
+                        g_screenHeight = event.size.height;
+                    }
                 }
                 break;
             }
@@ -315,7 +292,8 @@ int main()
 
                         ImGui::Text(mouseButtonsString.c_str());
 
-                        ImGui::Text((to_string((int)g_mouseWheelDelta)).c_str());
+                        if (g_map)
+                            ImGui::Text((to_string((int)g_map->mouseWheelDelta)).c_str());
                     }
 
                     ImGui::TreePop();
@@ -336,12 +314,15 @@ int main()
                     {
                         ImGui::Text(g_hasFocus ? "true" : "false");
 
-                        char tmp[256];
-                        sprintf_s(tmp, "%.1f, %.1f", g_cameraOffset.x, g_cameraOffset.y);
-                        ImGui::Text(tmp);
+                        if (g_map)
+                        {
+                            char tmp[256];
+                            sprintf_s(tmp, "%.1f, %.1f", g_map->cameraOffset.x, g_map->cameraOffset.y);
+                            ImGui::Text(tmp);
 
-                        sprintf_s(tmp, "%.1f", g_cameraZoom);
-                        ImGui::Text(tmp);
+                            sprintf_s(tmp, "%.1f", g_map->cameraZoom);
+                            ImGui::Text(tmp);
+                        }
                     }
 
                     TreePop();
@@ -600,14 +581,53 @@ int main()
             ImGui::End();
         }
 
-        //if (1)
-        //{
-        //    if (Begin("Map", nullptr, ImGuiWindowFlags_HorizontalScrollbar))
-        //    {
-        //        ImGui::Image(renderTexture);
-        //    }
-        //    ImGui::End();
-        //}
+        if (!g_maps.empty())
+        {
+            for (u32 m = 0; m < g_maps.size(); ++m)
+            {
+                Map * map = g_maps[m];
+
+                if (!map->docked)
+                {
+                    auto dock_id_center = ImGui::DockBuilderGetCentralNode(dockspace_id);
+                    DockBuilderDockWindow(g_map->getShortName().c_str(), dock_id_center->ID);
+                    map->docked = true;
+                }
+
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 1.0f);
+
+                if (Begin(map->getShortName().c_str(), &map->m_isOpen, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse /*| ImGuiWindowFlags_NoBackground*/))
+                {
+                    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
+                        g_map = map;
+
+                    ImGui::ImageButton(map->renderTexture, (sf::Vector2f)map->renderTexture.getSize(), 0, sf::Color::White, sf::Color::White);
+
+                    if (IsItemHovered())
+                        map->hovered = true;
+                    else
+                        map->hovered = false;
+                }
+                ImGui::End();
+
+                ImGui::PopStyleVar(2);
+            }
+
+            for (u32 m = 0; m < g_maps.size(); ++m)
+            {
+                Map * map = g_maps[m];
+
+                if (!map->m_isOpen)
+                {
+                    if (g_map == map)
+                        g_map = nullptr;
+
+                    g_maps.erase(g_maps.begin() + m);
+                    break;
+                }
+            }
+        }
 
         if (g_saveOptionDialog)
         {
@@ -672,8 +692,7 @@ int main()
             {
                 SetCurrentDirectory(g_currentWorkingDirectory.c_str());
                 newMap->refresh();
-                
-                resetCamera();
+                newMap->resetCamera();
 
                 // Is the map already loaded?
                 u32 mapIndex = u32(-1);
@@ -714,35 +733,39 @@ int main()
         const float panSpeed = 1.0f;
         const float zoomSpeed = 1.1f;
 
-        if (Mouse::isButtonPressed(Mouse::Left) && !IsWindowHovered(ImGuiHoveredFlags_AnyWindow) && !IsWindowFocused(ImGuiHoveredFlags_AnyWindow) && g_hasFocus)
+        //if (!IsWindowHovered(ImGuiHoveredFlags_AnyWindow) && !IsWindowFocused(ImGuiHoveredFlags_AnyWindow) && g_hasFocus)
+        if (g_map && g_map->hovered)
         {
-            if (!g_cameraPan)
+            if (Mouse::isButtonPressed(Mouse::Left))
             {
-                // begin pan
-                g_cameraPanOrigin = (Vector2f)Mouse::getPosition(window);
-                g_cameraPan = true;
+                if (!g_map->cameraPan)
+                {
+                    // begin pan
+                    g_map->cameraPanOrigin = (Vector2f)Mouse::getPosition(window);
+                    g_map->cameraPan = true;
+                }
+                else
+                {
+                    //continue pan
+                    g_map->cameraOffset = (g_map->cameraPanOrigin - (Vector2f)Mouse::getPosition(window)) * panSpeed * (g_map->cameraZoom*g_map->cameraZoom) + g_map->cameraPreviousOffset;
+                }
             }
-            else
+            else if (g_map->cameraPan)
             {
-                //continue pan
-                g_cameraOffset = (g_cameraPanOrigin - (Vector2f)Mouse::getPosition(window)) * panSpeed * (g_cameraZoom*g_cameraZoom) + g_cameraPreviousOffset;
+                // end pan
+                g_map->cameraPan = false;
+                g_map->cameraPreviousOffset = g_map->cameraOffset;
             }
-        }
-        else if (g_cameraPan)
-        {
-            // end pan
-            g_cameraPan = false;
-            g_cameraPreviousOffset = g_cameraOffset;
-        }
 
-        if (0 != g_mouseWheelDelta)
-        {
-            if (g_mouseWheelDelta < 0)
-                g_cameraZoom *= zoomSpeed;
-            else if (g_mouseWheelDelta > 0)
-                g_cameraZoom /= zoomSpeed;
+            if (0 != g_map->mouseWheelDelta)
+            {
+                if (g_map->mouseWheelDelta < 0)
+                    g_map->cameraZoom *= zoomSpeed;
+                else if (g_map->mouseWheelDelta > 0)
+                    g_map->cameraZoom /= zoomSpeed;
 
-            g_mouseWheelDelta = 0;
+                g_map->mouseWheelDelta = 0;
+            }
         }
 
         if (sf::Keyboard::isKeyPressed(Keyboard::F6))
@@ -752,7 +775,7 @@ int main()
         }
 
         // Clear backbuffer
-        window.clear();
+        window.clear(Color(0, 0, 0, 0));
 
         // Render map
         if (g_map)

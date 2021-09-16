@@ -98,6 +98,8 @@ struct SpawnInfo
 struct Map
 {
 public:
+    Map();
+
     // map_import.hpp
     bool importHMAP(const std::string & _map, const std::string & _cwd);
 
@@ -118,7 +120,12 @@ public:
 
     // misc
     void loadIcons();
+
     std::string getShortName() const;
+
+    void resetCameraPan();
+    void resetCameraZoom();
+    void resetCamera();
 
 private:
     u32 * loadTexture(tinyxml2::XMLElement * _xmlTerrainSave, const std::string & _name);
@@ -143,6 +150,7 @@ public:
     Bitmap bitmaps[MapBitmap::Count];
 
     bool loaded = false;
+    bool m_isOpen = true;
     
     TerritoryBackground territoryBackground = TerritoryBackground::Territory;
     bool showTerritoriesBorders = true;
@@ -168,4 +176,16 @@ public:
     std::vector<SpawnPoint> allSpawnsPoints;
 
     sf::RenderTexture renderTexture;
+
+    // camera
+    bool hovered = false;
+    bool docked = false;
+    bool cameraPan = false;
+    sf::Vector2f cameraPanOrigin;
+    sf::Vector2f cameraOffset = sf::Vector2f(0, 0);
+    sf::Vector2f cameraPreviousOffset = sf::Vector2f(0, 0);
+    float cameraZoom = 1.0f;
+    float mouseWheelDelta = 0;
+
+    ShaderID copyRGBshader = invalidShaderID;
 };

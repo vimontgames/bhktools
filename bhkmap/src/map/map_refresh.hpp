@@ -299,4 +299,6 @@ void Map::refresh()
             }
         }
     }
+
+    copyRGBshader = ShaderManager::add("data/shader/default_vs.fx", "data/shader/copyRGB_ps.fx");
 }

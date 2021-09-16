@@ -3,22 +3,23 @@ void Map::render(RenderWindow & _window)
     extern u32 g_screenWidth;
     extern u32 g_screenHeight;
 
-    // TODO: per-map view settings?
-    extern Vector2f g_cameraOffset;
-    extern float g_cameraZoom;
+    sf::ContextSettings contextSettings;
+                        contextSettings.sRgbCapable = true;
 
-    if (renderTexture.getSize().x != g_screenWidth || renderTexture.getSize().y != g_screenHeight)
-        renderTexture.create(g_screenWidth, g_screenHeight);
+    renderTexture.create(g_screenWidth, g_screenHeight, contextSettings);
+    renderTexture.clear(Color(255, 0, 255,255)); // should not be visible
 
-    renderTexture.clear();
+    sf::RenderTexture tempRenderTexture;
+    tempRenderTexture.create(g_screenWidth, g_screenHeight, contextSettings);
+    tempRenderTexture.clear(Color(0, 0, 0, 255));
 
     sf::View view;
              view.setCenter(sf::Vector2f(float(g_screenWidth)*0.5f, (float)(g_screenHeight)*0.5f));
              view.setSize(sf::Vector2f(float(g_screenWidth), (float)g_screenHeight));
-             view.zoom(g_cameraZoom); // zeng
-             view.move(g_cameraOffset);
+             view.zoom(cameraZoom); // zeng
+             view.move(cameraOffset);
 
-    renderTexture.setView(view);
+    tempRenderTexture.setView(view);
 
     for (u32 i = 0; i < MapBitmap::Count; ++i)
     {
@@ -81,7 +82,7 @@ void Map::render(RenderWindow & _window)
                     shader->setUniform("passFlags", passFlags);
                 }
 
-                renderTexture.draw(sprite, rs);
+                tempRenderTexture.draw(sprite, rs);
             }
 
             if (bitmap.drawSprites)
@@ -105,14 +106,29 @@ void Map::render(RenderWindow & _window)
                         shader->setUniform("color", color);
                     }
 
-                    renderTexture.draw(sprite, rs);
+                    tempRenderTexture.draw(sprite, rs);
                 }
             }
         }
     }
+
+    tempRenderTexture.display();
+
+    // clear alpha to one
+    RenderStates rs;
+    rs.shader = ShaderManager::get(copyRGBshader);
+    rs.blendMode = sf::BlendMode(BlendMode::Factor::One, sf::BlendMode::Factor::Zero, BlendMode::Equation::Add);
+    Sprite quad;
+    quad.setColor(Color(1, 1, 1, 1));
+    quad.setPosition(Vector2f(0, 0));
+    quad.setTexture(tempRenderTexture.getTexture());
+    quad.setTextureRect(IntRect(0, 0, renderTexture.getSize().x, renderTexture.getSize().y));
+    renderTexture.draw(quad, rs);
+
     renderTexture.display();
 
-    const Texture & tex = renderTexture.getTexture();
-    sf::Sprite sprite(tex);
-    _window.draw(sprite);
+    // copy to backbuffer
+    //const Texture & tex = renderTexture.getTexture();
+    //sf::Sprite sprite(tex);
+    //_window.draw(sprite);
 }

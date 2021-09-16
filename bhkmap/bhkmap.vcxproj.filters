@@ -121,6 +121,9 @@
     <None Include="..\data\shader\territories_vs.fx">
       <Filter>data\shader</Filter>
     </None>
+    <None Include="..\data\shader\copyRGB_ps.fx">
+      <Filter>data\shader</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\extern\miniz-cpp\zip_file.hpp">

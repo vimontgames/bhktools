@@ -132,4 +132,7 @@ void main()
 
     if (!visible && !edge)
         gl_FragColor.a = 0; 
+
+    //gl_FragColor.rgb = 0.5f;
+    //gl_FragColor.a = 1;
 }

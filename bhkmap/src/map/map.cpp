@@ -26,6 +26,12 @@ using namespace tinyxml2;
 #include "map_render.hpp"
 
 //--------------------------------------------------------------------------------------
+Map::Map()
+{
+    
+}
+
+//--------------------------------------------------------------------------------------
 void Map::loadIcons()
 {
     // load resource textures if needed
@@ -85,4 +91,24 @@ string Map::getShortName() const
         shortName.erase(ext);
 
     return shortName;
+}
+
+//--------------------------------------------------------------------------------------
+void Map::resetCameraPan()
+{
+    cameraOffset = Vector2f(0, 0);
+    cameraPreviousOffset = cameraOffset;
+}
+
+//--------------------------------------------------------------------------------------
+void Map::resetCameraZoom()
+{
+    cameraZoom = 1.0f;
+}
+
+//--------------------------------------------------------------------------------------
+void Map::resetCamera()
+{
+    resetCameraPan();
+    resetCameraZoom();
 }

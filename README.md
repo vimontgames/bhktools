@@ -17,6 +17,13 @@ SFML=G:\SFML\SFML-2.5.1
 
 # Changelog
 
+v0.5
+-----
+* Added multi-map support
+* Maps are displayed inside an ImGui window rather than the backbuffer directly
+
+![ScreenShot050](doc/img/screen050.png?raw=true "Screenshot050")
+
 v0.41
 -----
 * Fix corrupted zip file export
