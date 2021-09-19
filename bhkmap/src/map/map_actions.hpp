@@ -61,13 +61,9 @@ void Map::clearLandmarks()
     landmarkInfo.clear();
 
     for (u32 j = 0; j < height; ++j)
-    {
         for (u32 i = 0; i < width; ++i)
-        {
-            const u32 offset = i + j * width;
-            landmarks[offset] = 0xFF0000FF;
-        }
-    }
+            landmarksTexture.set(i,j, 0xFF0000FF);
+
     refresh();
 }
 
@@ -82,12 +78,8 @@ void Map::clearTerritories()
     territoriesInfo.push_back(empty);
 
     for (u32 j = 0; j < height; ++j)
-    {
         for (u32 i = 0; i < width; ++i)
-        {
-            const u32 offset = i + j * width;
-            zones[offset] = 0x00000000;
-        }
-    }
+            zonesTexture.set(i,j, 0x00000000);
+
     refresh();
 }

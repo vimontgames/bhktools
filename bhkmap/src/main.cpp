@@ -28,7 +28,6 @@ static const u32 g_fixedTextLengthLarge = 20;
 
 bool g_openFileDialog = false;
 bool g_saveFileDialog = false;
-bool g_saveOptionDialog = false;
 
 bool g_openDisplayWindow = true;
 bool g_openInfoWindow = true;
@@ -60,7 +59,7 @@ dbg_stream_for_cout g_DebugStreamFor_cout;
 
 #include "imgui_internal.h"
 
-const char * version = "bhkmap 0.5";
+const char * version = "bhkmap 0.51";
 
 //--------------------------------------------------------------------------------------
 int main() 
@@ -336,27 +335,60 @@ int main()
         {
             if (Begin("Infos", &g_openInfoWindow) && g_map)
             {
-                ImGui::Columns(2, "mycolumns2", false);  // 2-ways, no border
+                char temp[256];
+                sprintf_s(temp, g_map->author.c_str());
+                ImGui::InputText("Author", temp, 256, ImGuiInputTextFlags_ReadOnly);
+
+                if (TreeNodeEx("Size", ImGuiTreeNodeFlags_DefaultOpen))
                 {
-                    SetColumnWidth(0, 96.0f);
-                    ImGui::Text("Author");;
-                    ImGui::Text("Width");
-                    ImGui::Text("Height");
-                }
-                ImGui::NextColumn();
-                {
-                    ImGui::Text(g_map->author.c_str());
-                    ImGui::Text(to_string(g_map->width).c_str());
-                    ImGui::Text(to_string(g_map->height).c_str());
+                    int editMapSize[2] =
+                    {
+                        (int)g_map->width,
+                        (int)g_map->height
+                    };
+
+                    const bool editX = ImGui::InputInt("horizontal", &editMapSize[0], 1, 100, ImGuiInputTextFlags_ReadOnly);
+                    const bool editY = ImGui::InputInt("vertical", &editMapSize[1], 1, 100, ImGuiInputTextFlags_ReadOnly);
+
+                    if (editX || editY)
+                    {
+
+                    }
+
+                    TreePop();
                 }
 
-                ImGui::Columns(1);
+                if (TreeNodeEx("Offset", ImGuiTreeNodeFlags_DefaultOpen))
+                {
+                    int editMapOffset[2] =
+                    {
+                        g_map->mapOffset[0].x, g_map->mapOffset[0].y
+                    };
 
+                    const bool editX = ImGui::InputInt("horizontal", &editMapOffset[0]);
+                    const bool editY = ImGui::InputInt("vertical", &editMapOffset[1]);
+
+                    if (editX || editY)
+                    {
+                        g_map->mapOffset[0].x = editMapOffset[0];
+                        g_map->mapOffset[0].y = editMapOffset[1];
+
+                        Vector2i delta = g_map->mapOffset[0] - g_map->mapOffset[1];
+
+                        g_map->translate(delta);
+
+                        g_map->mapOffset[1] = g_map->mapOffset[0];
+
+                        g_map->refresh();
+                    }
+
+                    TreePop();
+                }          
+                
                 if (TreeNodeEx("Options", ImGuiTreeNodeFlags_DefaultOpen))
                 {
                     ImGui::Checkbox(getFixedSizeString("Map cycling", g_fixedTextLengthShort).c_str(), &g_map->useMapCycling);
                     ImGui::Checkbox(getFixedSizeString("Procedural mountain chains", g_fixedTextLengthShort).c_str(), &g_map->useProceduralMountainChains);
-
                     TreePop();
                 }
             }
@@ -629,39 +661,6 @@ int main()
             }
         }
 
-        if (g_saveOptionDialog)
-        {
-            ImGui::OpenPopup("Export options");
-
-            if (ImGui::BeginPopupModal("Export options", &g_saveOptionDialog))
-            {
-                PushTextWrapPos();
-
-                ImGui::Text("Unselected categories will not export the changes made in bhkmap and will keep their original values.");
-                ImGui::Text("\n");
-
-                ImGui::Checkbox(getFixedSizeString("Infos", g_fixedTextLengthShort).c_str(), &g_map->overrideMapOptions);
-                ImGui::Checkbox(getFixedSizeString("Spawns", g_fixedTextLengthShort).c_str(), &g_map->overridePlayerSpawns);
-                ImGui::Checkbox(getFixedSizeString("Landmarks", g_fixedTextLengthShort).c_str(), &g_map->overrideLandmarks);
-                ImGui::Text("\n");  
-                
-                if (ImGui::Button("Export"))
-                {
-                    g_map->exportHMAP(g_map->path, g_currentWorkingDirectory);
-                    g_saveOptionDialog = false;
-                }
-
-                ImGui::SameLine();
-
-                if (ImGui::Button("Cancel"))
-                    g_saveOptionDialog = false;
-
-                PopTextWrapPos();
-
-                ImGui::EndPopup();
-            }
-        }
-
         static bool demo = false;
         if (demo)
             ImGui::ShowDemoWindow(&demo);
@@ -721,9 +720,17 @@ int main()
         }
         else if (g_fileDialog.showFileDialog("Export", ImGuiFileBrowser::DialogMode::SAVE, ImVec2(float(g_screenWidth) / 2.0f, float(g_screenHeight) / 2.0f), ".hmap"))
         {
-            const string newFilePath = g_fileDialog.selected_path;
-            g_map->path = newFilePath;
-            g_saveOptionDialog = true;
+            if (g_map)
+            {
+                const string prevFilename = g_map->path;
+
+                const string newFilePath = g_fileDialog.selected_path;
+                g_map->path = newFilePath;
+                g_map->exportHMAP(g_map->path, g_currentWorkingDirectory);
+
+                if (prevFilename != g_map->path)
+                    g_map->docked = false;
+            }
         }
 
         if (needRefresh)

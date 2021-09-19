@@ -3,6 +3,7 @@
 #include "shadermanager.h"
 #include "resourceinfo.h"
 #include "tinyxml2.h"
+#include "Array2D.h"
 
 #define MAX_PLAYER_SPAWN 8
 
@@ -105,6 +106,7 @@ public:
 
     // map_export.hpp
     void exportHMAP(std::string & _map, const std::string & _cwd);
+    void saveBitmap(const Array2D<u32> _bitmap, tinyxml2::XMLElement * _xmlTerrainSave, const std::string & _field);
 
     // map_actions.hpp
     void randomizeSpawnOrder(); 
@@ -127,7 +129,10 @@ public:
     void resetCameraZoom();
     void resetCamera();
 
+    void translate(const sf::Vector2i & _offset);
+
 private:
+    template <typename T> void loadBitmap(Array2D<T> & _array, tinyxml2::XMLElement * _xmlTerrainSave, const std::string & _name, u32 _width, u32 _height);
     u32 * loadTexture(tinyxml2::XMLElement * _xmlTerrainSave, const std::string & _name);
         
 public:
@@ -137,11 +142,15 @@ public:
     u32 width = 0;
     u32 height = 0;
 
-    std::vector<u32> elevation;
-    std::vector<u32> zones;
-    std::vector<u32> poi;
-    std::vector<u32> landmarks;
-    std::vector<u32> naturalwonders;
+    Array2D<u32>    elevationTexture;
+    Array2D<u32>    zonesTexture;
+    Array2D<u32>    poiTexture;
+    Array2D<u32>    visibilityTexture;
+    Array2D<u32>    roadTexture;
+    Array2D<u32>    riverTexture;
+    Array2D<u32>    matchingSeedTexture;
+    Array2D<u32>    naturalWonderTexture;
+    Array2D<u32>    landmarksTexture;
 
     std::vector<Territory> territoriesInfo;
     std::vector<Landmark> landmarkInfo;
@@ -167,10 +176,6 @@ public:
     tinyxml2::XMLDocument xmlDocDescriptor;
     tinyxml2::XMLDocument xmlDocSave;
 
-    bool overrideMapOptions = true;
-    bool overridePlayerSpawns = true;
-    bool overrideLandmarks = true;
-
     u32 spawnPlayerCountDisplayed = 0;
     SpawnInfo spawnInfo[MAX_PLAYER_SPAWN];
     std::vector<SpawnPoint> allSpawnsPoints;
@@ -188,4 +193,6 @@ public:
     float mouseWheelDelta = 0;
 
     ShaderID copyRGBshader = invalidShaderID;
+
+    sf::Vector2i mapOffset[2] = { sf::Vector2i(0,0), sf::Vector2i(0,0) };
 };

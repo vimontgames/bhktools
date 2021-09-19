@@ -30,88 +30,91 @@ void Map::refresh()
         {
             const u32 offset = w + h * width;
 
-            // Heightfield
-            const ubyte height = elevation[offset];
+            // Elevation
+            const u32 & elevation = elevationTexture.get(w,h);
+
+            // Elevation::Heightfield
+            const ubyte height = elevation & 0x0F;
             Color heightfieldColor = Color(0, 0, 0, 0);
             heightfieldColor.a = height;
 
+            // Elevation::Tile
+            const ubyte tileIndex = (elevation >> 8) & 0x0F;
+
             // Zones
-            const ubyte territoryIndex = zones[offset];
+            const ubyte territoryIndex = zonesTexture.get(w, h);
             const Territory territory = territoriesInfo[territoryIndex];
             Color territoryColor = Color(0, 0, 0, 255);
 
             // Landmarks
-            const ubyte landmarkIndex = landmarks[offset];
+            const ubyte landmarkIndex = landmarksTexture.get(w, h);
 
             // Natural Wonders
-            const ubyte naturalWonderIndex = naturalwonders[offset];
-
-            // Tile
-            const ubyte tileIndex = (elevation[offset] >> 8) & 0x0F;
+            const ubyte naturalWonderIndex = naturalWonderTexture.get(w, h);
 
             switch (territoryBackground)
             {
-            case TerritoryBackground::None:
+                case TerritoryBackground::None:
+                    break;
+
+                case TerritoryBackground::Tile:
+                {
+                    territoryColor.r = 0;
+                    territoryColor.g = tileIndex;
+                    territoryColor.b = TEXEL_FLAG_VISIBLE;
+                    territoryColor.a = territoryIndex;
+                }
                 break;
 
-            case TerritoryBackground::Tile:
-            {
-                territoryColor.r = 0;
-                territoryColor.g = tileIndex;
-                territoryColor.b = TEXEL_FLAG_VISIBLE;
-                territoryColor.a = territoryIndex;
-            }
-            break;
-
-            case TerritoryBackground::Territory:
-            {
-                territoryColor.r = 0;
-                territoryColor.g = territoryIndex;
-                territoryColor.b = TEXEL_FLAG_VISIBLE;
-                territoryColor.a = territoryIndex;
-            }
-            break;
-
-            case TerritoryBackground::Biome:
-            {
-                u32 biomeIndex = territory.biome;
-
-                territoryColor.r = 0;
-                territoryColor.g = biomeIndex;
-                territoryColor.b = TEXEL_FLAG_VISIBLE;
-                territoryColor.a = territoryIndex;
-            }
-            break;
-
-            case TerritoryBackground::Landmarks:
-            {
-                if (0xFF != landmarkIndex)
+                case TerritoryBackground::Territory:
                 {
-                    // There's a bug in the map editor that makes not all landmarks are actually saved
-                    if (landmarkIndex < landmarkInfo.size())
-                    {
-                        const Landmark landmark = landmarkInfo[landmarkIndex];
+                    territoryColor.r = 0;
+                    territoryColor.g = territoryIndex;
+                    territoryColor.b = TEXEL_FLAG_VISIBLE;
+                    territoryColor.a = territoryIndex;
+                }
+                break;
 
+                case TerritoryBackground::Biome:
+                {
+                    u32 biomeIndex = territory.biome;
+
+                    territoryColor.r = 0;
+                    territoryColor.g = biomeIndex;
+                    territoryColor.b = TEXEL_FLAG_VISIBLE;
+                    territoryColor.a = territoryIndex;
+                }
+                break;
+
+                case TerritoryBackground::Landmarks:
+                {
+                    if (0xFF != landmarkIndex)
+                    {
+                        // There's a bug in the map editor that makes not all landmarks are actually saved
+                        if (landmarkIndex < landmarkInfo.size())
+                        {
+                            const Landmark landmark = landmarkInfo[landmarkIndex];
+
+                            territoryColor.r = 0;
+                            territoryColor.g = landmark.definitonIndex;
+                            territoryColor.b = TEXEL_FLAG_VISIBLE;
+                            territoryColor.a = landmarkIndex;
+                        }
+                    }
+                }
+                break;
+
+                case TerritoryBackground::Wonders:
+                {
+                    if (0xFF != (naturalWonderIndex & 0xFF))
+                    {
                         territoryColor.r = 0;
-                        territoryColor.g = landmark.definitonIndex;
+                        territoryColor.g = naturalWonderIndex;
                         territoryColor.b = TEXEL_FLAG_VISIBLE;
                         territoryColor.a = landmarkIndex;
                     }
                 }
-            }
-            break;
-
-            case TerritoryBackground::Wonders:
-            {
-                if (0xFF != (naturalWonderIndex & 0xFF))
-                {
-                    territoryColor.r = 0;
-                    territoryColor.g = naturalWonderIndex;
-                    territoryColor.b = TEXEL_FLAG_VISIBLE;
-                    territoryColor.a = landmarkIndex;
-                }
-            }
-            break;
+                break;
             }
 
             if (territory.ocean)
@@ -131,11 +134,11 @@ void Map::refresh()
             territories.image.setPixel(w, h, territoryColor);
 
             // Resource
-            const u32 poiData = poi[offset];
+            const u32 poiData = poiTexture.get(w,h);
             Color resColor = Color(0, 0, 0, 0);
 
             const u32 resourceIndex = poiData & 0xFF;
-            const u32 wonderIndex = naturalwonders[offset] & 0xFF;
+            const u32 wonderIndex = naturalWonderTexture.get(w, h) & 0xFF;
 
             float cellWidth = float(g_screenWidth) / float(width);
             Vector2f spriteOffset = Vector2f(0.0f, 0.0f);

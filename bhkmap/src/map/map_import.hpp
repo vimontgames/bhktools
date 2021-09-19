@@ -18,6 +18,14 @@ u32 * Map::loadTexture(XMLElement * _xmlTerrainSave, const string & _name)
 }
 
 //--------------------------------------------------------------------------------------
+template <typename T> void Map::loadBitmap(Array2D<T> & _array, tinyxml2::XMLElement * _xmlTerrainSave, const std::string & _name, u32 _width, u32 _height)
+{
+    u32 * bitmap = loadTexture(_xmlTerrainSave, _name.c_str());
+    _array = Array2D<T>(_width, _height, bitmap);
+    SAFE_FREE(bitmap);
+}
+
+//--------------------------------------------------------------------------------------
 bool Map::importHMAP(const string & _map, const string & _cwd)
 {
     // unzip file contents to temp folder
@@ -57,32 +65,15 @@ bool Map::importHMAP(const string & _map, const string & _cwd)
     u32 elevationLength = 0;
     xmlErr = xmlElevation->QueryUnsignedAttribute("Length", &elevationLength);
 
-    const u32 * elevation = loadTexture(xmlTerrainSave, "ElevationTexture");
-    const u32 * zones = loadTexture(xmlTerrainSave, "ZonesTexture");
-    const u32 * poi = loadTexture(xmlTerrainSave, "POITexture");
-    const u32 * landmarks = loadTexture(xmlTerrainSave, "LandmarksTexture");
-    const u32 * naturalwonders = loadTexture(xmlTerrainSave, "NaturalWonderTexture");
-
-    const u32 totalSize = width * height;
-
-    this->elevation.resize(totalSize);
-    this->zones.resize(totalSize);
-    this->poi.resize(totalSize);
-    this->landmarks.resize(totalSize);
-    this->naturalwonders.resize(totalSize);
-
-    for (u32 j = 0; j < height; ++j)
-    {
-        for (u32 i = 0; i < width; ++i)
-        {
-            const u32 offset = j * width + i;
-            this->elevation[offset] = elevation[offset];
-            this->zones[offset] = zones[offset];
-            this->poi[offset] = poi[offset];
-            this->landmarks[offset] = landmarks[offset];
-            this->naturalwonders[offset] = naturalwonders[offset];
-        }
-    }
+    loadBitmap(elevationTexture,     xmlTerrainSave, "ElevationTexture",     width, height);
+    loadBitmap(zonesTexture,         xmlTerrainSave, "ZonesTexture",         width, height);
+    loadBitmap(poiTexture,           xmlTerrainSave, "POITexture",           width, height);
+    loadBitmap(landmarksTexture,     xmlTerrainSave, "LandmarksTexture",     width, height);
+    loadBitmap(naturalWonderTexture, xmlTerrainSave, "NaturalWonderTexture", width, height);
+    loadBitmap(riverTexture,         xmlTerrainSave, "RiverTexture",         width, height);
+    loadBitmap(visibilityTexture,    xmlTerrainSave, "VisibilityTexture",    width, height);
+    loadBitmap(roadTexture,          xmlTerrainSave, "RoadTexture",          width, height);
+    loadBitmap(matchingSeedTexture,  xmlTerrainSave, "MatchingSeedTexture",  width, height);
 
     // load spawn points
     {

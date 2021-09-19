@@ -11,9 +11,7 @@
 
 #include <SFML/System/Clock.hpp>
 #include <SFML/System/Err.hpp>
-
 #include <SFML/Window/Event.hpp>
-
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Graphics/RenderTexture.hpp>
 #include <SFML/Graphics/Sprite.hpp>
@@ -21,6 +19,7 @@
 #include <SFML/Graphics/Shader.hpp>
 #include <SFML/Graphics/BlendMode.hpp>
 
+using i32 = int;
 using u32 = unsigned int;
 using ubyte = unsigned char;
 

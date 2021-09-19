@@ -189,5 +189,8 @@
     <ClInclude Include="src\map\map_render.hpp">
       <Filter>src\map</Filter>
     </ClInclude>
+    <ClInclude Include="src\Array2D.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

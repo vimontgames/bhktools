@@ -112,3 +112,34 @@ void Map::resetCamera()
     resetCameraPan();
     resetCameraZoom();
 }
+
+//--------------------------------------------------------------------------------------
+void Map::translate(const sf::Vector2i & _offset)
+{
+    int offsetX = _offset.x;
+    int offsetY = _offset.y;
+
+    while (offsetX < 0)
+        offsetX += width;
+    while (offsetY < 0)
+        offsetY += height;
+
+    debugPrint("Translate map by {%i,%i}\n", offsetX, offsetY);
+
+    for (u32 i = 0; i < allSpawnsPoints.size(); ++i)
+    {
+        SpawnPoint & spawn = allSpawnsPoints[i];
+        spawn.pos.x = ((int)spawn.pos.x + (int)width - offsetX) % (int)width;
+        spawn.pos.y = ((int)spawn.pos.y + (int)height - offsetY) % (int)height;
+    }
+
+    elevationTexture.    translate(offsetX, offsetY);
+    zonesTexture.        translate(offsetX, offsetY);
+    poiTexture.          translate(offsetX, offsetY);
+    landmarksTexture.    translate(offsetX, offsetY);
+    naturalWonderTexture.translate(offsetX, offsetY);
+    riverTexture.        translate(offsetX, offsetY);
+    visibilityTexture.   translate(offsetX, offsetY);
+    roadTexture.         translate(offsetX, offsetY);
+    matchingSeedTexture. translate(offsetX, offsetY);
+}

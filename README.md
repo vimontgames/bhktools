@@ -17,6 +17,13 @@ SFML=G:\SFML\SFML-2.5.1
 
 # Changelog
 
+v0.51
+-----
+* Offset map
+* Refactor bitmap import/export to use 2D arrays
+
+![ScreenShot051](doc/img/screen051.png?raw=true "Screenshot051")
+
 v0.5
 -----
 * Added multi-map support
