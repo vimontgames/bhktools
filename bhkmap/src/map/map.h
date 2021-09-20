@@ -5,7 +5,7 @@
 #include "tinyxml2.h"
 #include "Array2D.h"
 
-#define MAX_PLAYER_SPAWN 8
+#define MAX_PLAYER_SPAWN 10
 
 //--------------------------------------------------------------------------------------
 enum MapBitmap
@@ -110,7 +110,10 @@ public:
 
     // map_actions.hpp
     void randomizeSpawnOrder(); 
+    void addSpawn();
     void computeSpawnOrder();
+    void mergeSpawns();
+    void removeSpawn(u32 _index);
     void clearTerritories();
     void clearLandmarks();
 
@@ -177,6 +180,8 @@ public:
     tinyxml2::XMLDocument xmlDocSave;
 
     u32 spawnPlayerCountDisplayed = 0;
+    int empireCount = 0;
+
     SpawnInfo spawnInfo[MAX_PLAYER_SPAWN];
     std::vector<SpawnPoint> allSpawnsPoints;
 
@@ -195,4 +200,6 @@ public:
     ShaderID copyRGBshader = invalidShaderID;
 
     sf::Vector2i mapOffset[2] = { sf::Vector2i(0,0), sf::Vector2i(0,0) };
+
+    
 };

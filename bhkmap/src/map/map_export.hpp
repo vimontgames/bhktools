@@ -10,6 +10,12 @@ void Map::exportHMAP(string & _map, const string & _cwd)
     if (extension != "hmap")
         _map += ".hmap";
 
+    {
+        XMLElement * xmlDoc = xmlDocDescriptor.FirstChildElement("Document");
+        XMLElement * xmlTerrainSaveDescriptor = xmlDoc->FirstChildElement("TerrainSaveDescriptor");
+        xmlTerrainSaveDescriptor->FirstChildElement("EmpiresCount")->FirstChild()->SetValue(to_string(empireCount).c_str());
+    }
+
     XMLElement * xmlDoc = xmlDocSave.FirstChildElement("Document");
     XMLElement * xmlTerrainSave = xmlDoc->FirstChildElement("TerrainSave");
 

@@ -41,9 +41,17 @@ bool Map::importHMAP(const string & _map, const string & _cwd)
     XMLError xmlErr;
 
     // load descriptor
-    string xmlDescriptorFilename = tempFolder + "Descriptor.hmd";
-    xmlErr = xmlDocDescriptor.LoadFile(xmlDescriptorFilename.c_str());
-    assert(XML_SUCCESS == xmlErr);
+    {
+        string xmlDescriptorFilename = tempFolder + "Descriptor.hmd";
+        xmlErr = xmlDocDescriptor.LoadFile(xmlDescriptorFilename.c_str());
+        assert(XML_SUCCESS == xmlErr);
+
+        XMLElement * xmlDoc = xmlDocDescriptor.FirstChildElement("Document");
+        XMLElement * xmlTerrainSaveDescriptor = xmlDoc->FirstChildElement("TerrainSaveDescriptor");
+        u32 count = 0;
+        xmlErr = xmlTerrainSaveDescriptor->FirstChildElement("EmpiresCount")->ToElement()->QueryUnsignedText(&count);
+        empireCount = count;
+    }
 
     // load xml
     string xmlSaveFilename = tempFolder + "Save.hms";

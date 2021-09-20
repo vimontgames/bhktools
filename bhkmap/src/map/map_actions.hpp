@@ -28,6 +28,7 @@ void Map::randomizeSpawnOrder()
     }
 
     computeSpawnOrder();
+    mergeSpawns();
     refresh();
 }
 
@@ -51,6 +52,55 @@ void Map::computeSpawnOrder()
             }
         }
     }
+
+   
+}
+
+//--------------------------------------------------------------------------------------
+// if several spawns have the same coordinate then merge them
+//--------------------------------------------------------------------------------------
+void Map::mergeSpawns()
+{
+    RESTART:
+
+    for (u32 j = 0; j < allSpawnsPoints.size(); ++j)
+    {
+        for (u32 i = 0; i < allSpawnsPoints.size(); ++i)
+        {
+            if (i != j)
+            {
+                SpawnPoint & original = allSpawnsPoints[j];
+                const SpawnPoint & copy = allSpawnsPoints[i];
+
+                if (original.pos == copy.pos)
+                {
+                    original.flags |= copy.flags;
+                    allSpawnsPoints.erase(allSpawnsPoints.begin() + i);
+                    goto RESTART;
+                }
+            }
+        }
+    }
+}
+
+//--------------------------------------------------------------------------------------
+void Map::removeSpawn(u32 _index)
+{
+    allSpawnsPoints.erase(allSpawnsPoints.begin() + _index);
+    computeSpawnOrder();
+    refresh();
+}
+
+//--------------------------------------------------------------------------------------
+// Add another spawn for the current player count
+//--------------------------------------------------------------------------------------
+void Map::addSpawn()
+{
+    SpawnPoint spawn;
+    spawn.pos = { 0,0 };
+    spawn.flags = 1 << (spawnPlayerCountDisplayed-1);
+    allSpawnsPoints.push_back(spawn);
+    computeSpawnOrder();
 }
 
 //--------------------------------------------------------------------------------------

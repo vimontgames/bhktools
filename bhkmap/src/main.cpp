@@ -59,7 +59,7 @@ dbg_stream_for_cout g_DebugStreamFor_cout;
 
 #include "imgui_internal.h"
 
-const char * version = "bhkmap 0.51";
+const char * version = "bhkmap 0.52";
 
 //--------------------------------------------------------------------------------------
 int main() 
@@ -430,8 +430,13 @@ int main()
         {
             if (Begin("Spawns", &g_openSpawnsWindow) && g_map)
             {
-                if (ImGui::Button("Randomize order"))
+                ImGui::InputInt("Empire count", &g_map->empireCount, 1, 100);
+
+                if (ImGui::Button("Randomize spawns order"))
                     g_map->randomizeSpawnOrder();
+                ImGui::SameLine();
+                if (ImGui::Button("Add spawn point"))
+                    g_map->addSpawn();
 
                 for (u32 i = 0; i < g_map->allSpawnsPoints.size(); ++i)
                 {
@@ -463,10 +468,16 @@ int main()
                                         spawn.flags &= ~(1 << b);
                                 }
 
+                                if (needRefresh)
+                                    g_map->computeSpawnOrder();
+
                                 EndCombo();
                             }
 
                             PopItemWidth();
+
+                            if (ImGui::Button("Delete"))
+                                g_map->removeSpawn(i);
 
                             TreePop();
                         }
