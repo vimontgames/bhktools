@@ -17,6 +17,10 @@ SFML=G:\SFML\SFML-2.5.1
 
 # Changelog
 
+v0.52
+-----
+* Can now increase max player count up to 10
+
 v0.51
 -----
 * Offset map
