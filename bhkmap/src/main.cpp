@@ -59,7 +59,7 @@ dbg_stream_for_cout g_DebugStreamFor_cout;
 
 #include "imgui_internal.h"
 
-const char * version = "bhkmap 0.52";
+const char * version = "bhkmap 0.53";
 
 //--------------------------------------------------------------------------------------
 int main() 
@@ -586,7 +586,7 @@ int main()
 
                     needRefresh |= ImGui::Checkbox(getFixedSizeString("Wonders", g_fixedTextLengthShort).c_str(), &g_map->showWonders);
                     if (g_map->showWonders)
-                        needRefresh |= ListResources(naturalWonderResources, (u32)StrategicResource::First, (u32)StrategicResource::Last);
+                        needRefresh |= ListResources(naturalWonderResources, (u32)NaturalWonderResource::First, (u32)NaturalWonderResource::Last);
 
                     needRefresh |= ImGui::Checkbox(getFixedSizeString("Spawns", g_fixedTextLengthShort).c_str(), &g_map->showSpawnPoints);
                     if (g_map->showSpawnPoints)
