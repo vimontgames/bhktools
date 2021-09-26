@@ -17,6 +17,10 @@ SFML=G:\SFML\SFML-2.5.1
 
 # Changelog
 
+v0.53
+-----
+* Fix some natural wonders not showing
+
 v0.52
 -----
 * Can now increase max player count up to 10
