@@ -17,6 +17,10 @@ SFML=G:\SFML\SFML-2.5.1
 
 # Changelog
 
+v0.54
+-----
+* Change global UI scale
+
 v0.53
 -----
 * Fix some natural wonders not showing
