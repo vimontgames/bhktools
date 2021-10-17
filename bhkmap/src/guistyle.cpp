@@ -13,6 +13,8 @@ string getFixedSizeString(const string & _string, u32 _size)
     return result;
 }
 
+float g_globalScale = 1.0f;
+
 //--------------------------------------------------------------------------------------
 void SetupImGuiStyle()
 {
@@ -46,6 +48,21 @@ void SetupImGuiStyle()
     style.TabRounding = rounding;
 #endif
 
+    float scale = g_globalScale;
+
+    //style.WindowBorderSize *= scale;           // Thickness of border around windows. Generally set to 0.0f or 1.0f. (Other values are not well tested and more CPU/GPU costly).
+    //style.WindowMinSize.x *= scale;  
+    //style.WindowMinSize.y *= scale;            // Minimum window size. This is a global setting. If you want to constraint individual windows, use SetNextWindowSizeConstraints().
+    //style.ChildBorderSize *= scale;            // Thickness of border around child windows. Generally set to 0.0f or 1.0f. (Other values are not well tested and more CPU/GPU costly).
+    //style.PopupBorderSize *= scale;            // Thickness of border around popup/tooltip windows. Generally set to 0.0f or 1.0f. (Other values are not well tested and more CPU/GPU costly).
+    //style.FrameBorderSize *= scale;            // Thickness of border around frames. Generally set to 0.0f or 1.0f. (Other values are not well tested and more CPU/GPU costly).
+    //style.ScrollbarSize *= scale;              // Width of the vertical scrollbar, Height of the horizontal scrollbar.
+    //style.GrabMinSize *= scale;                // Minimum width/height of a grab box for slider/scrollbar.
+    //style.TabBorderSize *= scale;              // Thickness of border around tabs.
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.FontGlobalScale = scale;
+    
     //colors[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 0.75f);
     //colors[ImGuiCol_TextDisabled] = ImVec4(1.00f, 1.00f, 1.00f, 0.50f);
     //colors[ImGuiCol_WindowBg] = ImVec4(0.26f, 0.26f, 0.26f, 1.00f);

@@ -59,7 +59,7 @@ dbg_stream_for_cout g_DebugStreamFor_cout;
 
 #include "imgui_internal.h"
 
-const char * version = "bhkmap 0.53";
+const char * version = "bhkmap 0.54";
 
 //--------------------------------------------------------------------------------------
 int main() 
@@ -232,6 +232,15 @@ int main()
                 {
                     ImGui::TextDisabled("Empty");
                 }
+
+                ImGui::EndMenu();
+            }
+
+            if (ImGui::BeginMenu("Options"))
+            {
+                extern float g_globalScale;
+                if (ImGui::DragFloat("UI Scale", &g_globalScale, 0.25f, 1.0f, 2.0f, "%.1f", 1.0f))
+                    SetupImGuiStyle();
 
                 ImGui::EndMenu();
             }
