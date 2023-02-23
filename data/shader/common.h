@@ -26,9 +26,9 @@ uniform sampler2D texture;
 
 float2 hexUV(float2 uv)
 {
-    if (PASS_FLAG_HEXES & passFlags)
+    if (0 != (PASS_FLAG_HEXES & passFlags))
     {
-        if (int(uv.y * texSize.y) & 1)
+        if (0 != (int(uv.y * texSize.y) & 1))
             uv.x += 0.25f / texSize.x;
         else
             uv.x -= 0.25f / texSize.x;

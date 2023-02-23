@@ -1,5 +1,7 @@
 void main()
 {
+    gl_FragColor.rgba = float4(0,1,2,3);
+
     float2 invScreenSize = 1.0f / screenSize * 1.5f;
 
     float2 uv = gl_TexCoord[0].xy;
@@ -83,12 +85,12 @@ void main()
         float3(0.9f,0.7f,0.1f), // wasteland
         float3(0.4f,0.5f,0.0f)  // woodland
     };
-    
+  
     int passIndex = passFlags & PASS_TYPE_MASK;
     switch (passIndex)
     {
         default:
-            color = center.g;
+            color = center.ggg;
             break;
 
         case PASS_TYPE_TILE:
@@ -109,10 +111,10 @@ void main()
             break;
 
         case PASS_TYPE_WONDER:
-            color = 1;
+            color = float3(1,1,1);
             break;
     }     
-       
+            
     float3 edgeColor = float3(1, 1, 1);
     
     bool visible = 0 != (flags & TEXEL_FLAG_VISIBLE);
@@ -131,8 +133,5 @@ void main()
     gl_FragColor.rgba = edge ? float4(edgeColor, edgeOpacity) : float4(color, territoryOpacity);
 
     if (!visible && !edge)
-        gl_FragColor.a = 0; 
-
-    //gl_FragColor.rgb = 0.5f;
-    //gl_FragColor.a = 1;
+        gl_FragColor.a = 0;
 }

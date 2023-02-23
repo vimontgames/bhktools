@@ -59,7 +59,7 @@ dbg_stream_for_cout g_DebugStreamFor_cout;
 
 #include "imgui_internal.h"
 
-const char * version = "bhkmap 0.54";
+const char * version = "bhkmap 0.55";
 
 //--------------------------------------------------------------------------------------
 int main() 
