@@ -17,6 +17,10 @@ SFML=G:\SFML\SFML-2.5.1
 
 # Changelog
 
+v0.55
+-----
+* Fix pink screen when opening map because of new (?) GLSL shader compilation errors
+
 v0.54
 -----
 * Change global UI scale
